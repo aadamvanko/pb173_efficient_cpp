@@ -2,9 +2,9 @@
 #include <cassert>
 #include <array>
 #include <set>
-#include <chrono>
 #include <vector>
 #include <random>
+#include <ctime>
 
 template<int MAX_SIZE>
 class PriorityBufferArray
@@ -147,55 +147,55 @@ void benchmarkTests()
 		randomNumbers[i] = dist(rng);
 	}
 
-	std::chrono::steady_clock::time_point beginTime, endTime;
+	clock_t beginTime, endTime;
 
 	PriorityBufferArray<5> pba5;
-	beginTime = std::chrono::steady_clock::now();
+	beginTime = std::clock();
 	for (int x : randomNumbers)
 		pba5.insert(x);
-	endTime = std::chrono::steady_clock::now();
+	endTime = std::clock();
 	std::cout << "insert time PriorityBufferArray with n = 5 ... " <<
-		std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count() << " microseconds " << std::endl;
+		(double)(endTime - beginTime) / CLOCKS_PER_SEC << " seconds " << std::endl;
 
 	PriorityBufferSet<5> pbs5;
-	beginTime = std::chrono::steady_clock::now();
+	beginTime = std::clock();
 	for (int x : randomNumbers)
 		pbs5.insert(x);
-	endTime = std::chrono::steady_clock::now();
+	endTime = std::clock();
 	std::cout << "insert time PriorityBufferSet with n = 5 ... " <<
-		std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count() << " microseconds " << std::endl;
+		(double)(endTime - beginTime) / CLOCKS_PER_SEC << " seconds " << std::endl;
 
 	PriorityBufferArray<10> pba10;
-	beginTime = std::chrono::steady_clock::now();
+	beginTime = std::clock();
 	for (int x : randomNumbers)
 		pba10.insert(x);
-	endTime = std::chrono::steady_clock::now();
+	endTime = std::clock();
 	std::cout << "insert time PriorityBufferArray with n = 10 ... " <<
-		std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count() << " microseconds " << std::endl;
+		(double)(endTime - beginTime) / CLOCKS_PER_SEC << " seconds " << std::endl;
 
 	PriorityBufferArray<10> pbs10;
-	beginTime = std::chrono::steady_clock::now();
+	beginTime = std::clock();
 	for (int x : randomNumbers)
 		pbs10.insert(x);
-	endTime = std::chrono::steady_clock::now();
+	endTime = std::clock();
 	std::cout << "insert time PriorityBufferSet with n = 10 ... " <<
-		std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count() << " microseconds " << std::endl;
+		(double)(endTime - beginTime) / CLOCKS_PER_SEC << " seconds " << std::endl;
 
 	PriorityBufferArray<10000> pba10000;
-	beginTime = std::chrono::steady_clock::now();
+	beginTime = std::clock();
 	for (int x : randomNumbers)
 		pba10000.insert(x);
-	endTime = std::chrono::steady_clock::now();
+	endTime = std::clock();
 	std::cout << "insert time PriorityBufferArray with n = 10000 ... " <<
-		std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count() << " microseconds " << std::endl;
+		(double)(endTime - beginTime) / CLOCKS_PER_SEC << " seconds " << std::endl;
 
 	PriorityBufferSet<10000> pbs10000;
-	beginTime = std::chrono::steady_clock::now();
+	beginTime = std::clock();
 	for (int x : randomNumbers)
 		pbs10000.insert(x);
-	endTime = std::chrono::steady_clock::now();
+	endTime = std::clock();
 	std::cout << "insert time PriorityBufferSet with n = 10000 ... " <<
-		std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count() << " microseconds " << std::endl;
+		(double)(endTime - beginTime) / CLOCKS_PER_SEC << " seconds " << std::endl;
 }
 
 int main()
