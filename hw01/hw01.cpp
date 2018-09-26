@@ -198,9 +198,41 @@ void benchmarkTests()
 		(double)(endTime - beginTime) / CLOCKS_PER_SEC << " seconds " << std::endl;
 }
 
+void funcToBench()
+{
+    for (int i = 0; i < 100; i++)
+    {
+        printf("Hello World!");
+    }
+}
+
+class Benchmarking
+{
+    private:
+
+
+    public:
+        void init()
+        {
+
+        }
+
+        void run(void (*func)(void))
+        {
+            for (int i = 0; i < 10; i++)
+            {
+
+                func();
+            }
+        }
+};
+
 int main()
 {
+    Benchmarking benchmarking;
+    benchmarking.init();
 
+    benchmarking.run(&funcToBench);
 
-	return 0;
+    return 0;
 }
