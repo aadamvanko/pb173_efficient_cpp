@@ -15,6 +15,7 @@ namespace Benchmarking
     int timeLimit = 1; // seconds
     int precisionLimit = 20; // percent
     const int BOOTSTRAP_CYCLES_COUNT = 10000;
+    const long long BILLION = 1000000000;
 
     const double NANOSECONDS_IN_SECOND = 1e9;
     struct timespec startTime;
@@ -65,16 +66,9 @@ namespace Benchmarking
             while (benchmarkEndTime.tv_sec - benchmarkStartTime.tv_sec < timeLimit)
             {
                 functionToBenchmark(size);
-                __syscall_slong_t measuredTime = stopTime.tv_nsec - startTime.tv_nsec;
-                if (measuredTime < 0)
-                {
-                    // I dont know how this can happen yet, but it happen only with last run
-                    std::cout << "ERROR benchmarked time is NEGATIVE, = " << measuredTime << std::endl;
-                }
-                else
-                {
-                    measuredTimes.push_back(measuredTime);
-                }
+                __syscall_slong_t measuredTime = (stopTime.tv_sec - startTime.tv_sec) * BILLION +
+                                                 (stopTime.tv_nsec - startTime.tv_nsec);
+                measuredTimes.push_back(measuredTime);
                 clock_gettime(CLOCK_MONOTONIC, &benchmarkEndTime);
             }
 
