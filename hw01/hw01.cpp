@@ -206,8 +206,7 @@ namespace Benchmarking
     enum class Profiles { TIME, PRECISION } profile = Profiles::TIME;
     int timeLimit = 1; // seconds
     int precisionLimit = 20; // percent
-    const int BOOTSTRAP_CYCLES_COUNT = 1;
-
+    const int BOOTSTRAP_CYCLES_COUNT = 10000;
 
     const double NANOSECONDS_IN_SECOND = 1e9;
     struct timespec startTime;
@@ -276,29 +275,40 @@ namespace Benchmarking
             for (int i = 0; i < BOOTSTRAP_CYCLES_COUNT; i++)
             {
                 std::vector<long long> selectedTimes;
-                std::cout << "measured times size = " << measuredTimes.size() << std::endl;
+                //std::cout << "measured times size = " << measuredTimes.size() << std::endl;
                 long long suma = 0;
                 for (unsigned j = 0; j < measuredTimes.size(); j++)
                 {
                     unsigned index = std::rand() % measuredTimes.size();
                     selectedTimes.push_back(measuredTimes[index]);
                     suma += measuredTimes[index];
-                    std::cout << suma << std::endl;
+                    //std::cout << suma << std::endl;
                 }
                 long long sum = std::accumulate(selectedTimes.begin(), selectedTimes.end(), 0LL);
                 double average = sum / NANOSECONDS_IN_SECOND / (double)selectedTimes.size(); // estimator
                 bootstrappedValues.push_back(average);
+                std::cout << "avg = " << average << std::endl;
             }
 
             double bootstrappedValuesSum = std::accumulate(bootstrappedValues.begin(), bootstrappedValues.end(), 0.0);
             double bootstrappedValuesAverage = bootstrappedValuesSum / bootstrappedValues.size();
 
+            // for percentile finding
             std::sort(bootstrappedValues.begin(), bootstrappedValues.end());
 
-            double mCILow;
-            double aCILow;
-            double mCIHigh;
-            double aCIHigh;
+            // calculate standard deviation
+            double sd = 0.0;
+            for (double bootstrappedValue : bootstrappedValues)
+            {
+                sd += (bootstrappedValue - bootstrappedValuesAverage) * (bootstrappedValue - bootstrappedValuesAverage);
+            }
+            sd /= bootstrappedValues.size();
+            sd = std::sqrt(sd);
+
+            double mCILow = bootstrappedValues[unsigned(bootstrappedValues.size() * 0.05)];
+            double aCILow = bootstrappedValuesAverage - 2 * sd;
+            double mCIHigh = bootstrappedValues[unsigned(bootstrappedValues.size() * 0.95)];
+            double aCIHigh = bootstrappedValuesAverage + 2 * sd;
             std::cout << name << ", " << size << ", " << mCILow << ", " << aCILow << ", " << bootstrappedValuesAverage <<
                          ", " << mCIHigh << ", " << aCIHigh << std::endl;
         }
@@ -339,7 +349,7 @@ void funcToBench(int times)
 int main(int argc, char* argv[])
 {
     Benchmarking::init(argc, argv);
-    Benchmarking::run("string benchmark", &funcToBench, 1000);
+    Benchmarking::run("string benchmark", &funcToBench, 1000000);
 
     return 0;
 }
