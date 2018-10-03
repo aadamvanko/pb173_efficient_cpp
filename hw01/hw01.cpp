@@ -6,6 +6,7 @@
 #include <random>
 #include <ctime>
 #include <cstring>
+#include <iomanip>
 
 template<int MAX_SIZE>
 class PriorityBufferArray
@@ -204,9 +205,10 @@ namespace Benchmarking
     enum class Profiles { TIME, PRECISION } profile = Profiles::TIME;
     int timeLimit = 1; // seconds
     int precisionLimit = 20; // percent
+    const int BOOTSTRAP_CYCLES_COUNT = 1;
 
 
-    const double BILLION = 1e9;
+    const double NANOSECONDS_IN_SECOND = 1e9;
     struct timespec startTime;
     struct timespec stopTime;
 
@@ -215,9 +217,14 @@ namespace Benchmarking
 
     void init(int argc, char* argv[])
     {
+        // for good bootstrapping
+        srand(time(NULL));
+        // for nice outputs
+        std::cout << std::fixed << std::setprecision(10);
+
         if (argc != 3)
         {
-            std::cerr << "Wrong number of agruments given to program!" << std::endl;
+            std::cout << "Wrong number of agruments given to program!" << std::endl;
             return;
         }
 
@@ -233,11 +240,11 @@ namespace Benchmarking
         }
         else
         {
-            std::cerr << "Wrong parameter " << argv[1] << ", expected time or prec!" << std::endl;
+            std::cout << "Wrong parameter " << argv[1] << ", expected time or prec!" << std::endl;
         }
     }
 
-    void run(void (*functionToBenchmark)(int), int size)
+    void run(const char* name, void (*functionToBenchmark)(int), int size)
     {
         measuredTimes.clear();
 
@@ -250,10 +257,49 @@ namespace Benchmarking
             while (benchmarkEndTime.tv_sec - benchmarkStartTime.tv_sec < timeLimit)
             {
                 functionToBenchmark(size);
-                long long measuredTime = stopTime.tv_nsec - startTime.tv_nsec;
-                measuredTimes.push_back(measuredTime);
+                __syscall_slong_t measuredTime = stopTime.tv_nsec - startTime.tv_nsec;
+                if (measuredTime < 0)
+                {
+                    // I dont know how this can happen yet
+                    std::cout << "ERROR benchmarked time is NEGATIVE, = " << measuredTime << std::endl;
+                }
+                else
+                {
+                    measuredTimes.push_back(measuredTime);
+                }
                 clock_gettime(CLOCK_MONOTONIC, &benchmarkEndTime);
             }
+
+            std::cout << "Bootstrapping..." << std::endl;
+            std::vector<double> bootstrappedValues;
+            for (int i = 0; i < BOOTSTRAP_CYCLES_COUNT; i++)
+            {
+                std::vector<long long> selectedTimes;
+                std::cout << "measured times size = " << measuredTimes.size() << std::endl;
+                long long suma = 0;
+                for (unsigned j = 0; j < measuredTimes.size(); j++)
+                {
+                    unsigned index = std::rand() % measuredTimes.size();
+                    selectedTimes.push_back(measuredTimes[index]);
+                    suma += measuredTimes[index];
+                    std::cout << suma << std::endl;
+                }
+                long long sum = std::accumulate(selectedTimes.begin(), selectedTimes.end(), 0LL);
+                double average = sum / NANOSECONDS_IN_SECOND / (double)selectedTimes.size(); // estimator
+                bootstrappedValues.push_back(average);
+            }
+
+            double bootstrappedValuesSum = std::accumulate(bootstrappedValues.begin(), bootstrappedValues.end(), 0.0);
+            double bootstrappedValuesAverage = bootstrappedValuesSum / bootstrappedValues.size();
+
+            std::sort(bootstrappedValues.begin(), bootstrappedValues.end());
+
+            double mCILow = ;
+            double aCILow;
+            double mCIHigh;
+            double aCIHigh;
+            std::cout << name << ", " << size << ", " << mCILow << ", " << aCILow << ", " << bootstrappedValuesAverage <<
+                         ", " << mCIHigh << ", " << aCIHigh << std::endl;
         }
         else
         {
@@ -279,17 +325,20 @@ namespace Benchmarking
 void funcToBench(int times)
 {
     Benchmarking::start();
+    std::string str;
     for (int i = 0; i < times; i++)
     {
-        printf("Hello World!");
+        str += "a";
     }
+    str.erase(str.begin() + 1, str.end());
+    std::cout << "str = " << str << std::endl;
     Benchmarking::stop();
 }
 
 int main(int argc, char* argv[])
 {
     Benchmarking::init(argc, argv);
-    Benchmarking::run(&funcToBench, 100);
+    Benchmarking::run("string benchmark", &funcToBench, 1000);
 
     return 0;
 }
