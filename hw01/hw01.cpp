@@ -7,6 +7,7 @@
 #include <ctime>
 #include <cstring>
 #include <iomanip>
+#include <algorithm>
 
 template<int MAX_SIZE>
 class PriorityBufferArray
@@ -294,7 +295,7 @@ namespace Benchmarking
 
             std::sort(bootstrappedValues.begin(), bootstrappedValues.end());
 
-            double mCILow = ;
+            double mCILow;
             double aCILow;
             double mCIHigh;
             double aCIHigh;
