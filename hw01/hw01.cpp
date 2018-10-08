@@ -147,15 +147,15 @@ namespace Benchmarking
             std::cout << "Running precision benchmark..." << std::endl;
             run_benchmark_for_time(PRECISION_INITIAL_TIME_LIMIT, functionToBenchmark, size);
 
-            auto bootstrapResults = calculate_bootstrap_stats();
-            std::cout << "CI wanted diff = " << (1.0 + precisionLimit / 100.0) << std::endl;
-            std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow << std::endl;
+            bootstrapResults = calculate_bootstrap_stats();
+            std::cout << "CI wanted diff = " << precisionLimit / 100.0 << std::endl;
+            std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1 << std::endl;
             while (bootstrapResults.mCIHigh / bootstrapResults.mCILow >= (1.0 + precisionLimit / 100.0))
             {
                 std::cout << "Not enough precision, running one more benchmark..." << std::endl;
                 run_benchmark_once(functionToBenchmark, size);
                 bootstrapResults = calculate_bootstrap_stats();
-                std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow << std::endl;
+                std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1<< std::endl;
             }
         }
 
