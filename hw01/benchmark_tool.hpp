@@ -9,61 +9,35 @@
 #include <iomanip>
 #include <algorithm>
 
+#define BENCHMARKING_RUN(function, data) Benchmarking::run(#function, function, data)
+
 namespace Benchmarking
 {
-    enum class Profiles { TIME, PRECISION } profile = Profiles::PRECISION;
-    int timeLimit = 2; // seconds
-    int precisionLimit = 2; // percent
-
-    const int PRECISION_INITIAL_TIME_LIMIT = 5; // seconds
-    const int BOOTSTRAP_CYCLES_COUNT = 10000;
-    const long long NANOSECONDS_IN_SECOND = 1000000000;
-
-    struct timespec startTime;
-    struct timespec stopTime;
-
-    std::vector<long long> measuredTimes;
-
-
-    void init(int argc, char* argv[])
-    {
-        // for good bootstrapping
-        srand(time(NULL));
-        // for nice outputs
-        std::cout << std::fixed << std::setprecision(10);
-
-        if (argc != 3)
-        {
-            std::cout << "Wrong number of agruments given to program!" << std::endl;
-            return;
-        }
-
-        if (std::strcmp(argv[1], "time") == 0)
-        {
-            timeLimit = std::stoi(argv[2]);
-            profile = Profiles::TIME;
-        }
-        else if (std::strcmp(argv[1], "prec") == 0)
-        {
-            precisionLimit = std::stoi(argv[2]);
-            profile = Profiles::PRECISION;
-        }
-        else
-        {
-            std::cout << "Wrong parameter " << argv[1] << ", expected time or prec!" << std::endl;
-        }
-    }
-
     namespace
     {
-        void run_benchmark_for_time(int limit, void (*functionToBenchmark)(int), int size)
+        #define TO_STR(x) #x
+
+        enum class Profiles { TIME, PRECISION } profile = Profiles::TIME;
+        int timeLimit = 5; // seconds
+        int precisionLimit = 2; // percent
+
+        const int PRECISION_INITIAL_TIME_LIMIT = 5; // seconds
+        const int BOOTSTRAP_CYCLES_COUNT = 10000;
+        const long long NANOSECONDS_IN_SECOND = 1000000000;
+
+        timespec startTime;
+        timespec stopTime;
+
+        std::vector<long long> measuredTimes;
+
+        void run_benchmark_for_time(int limit, void (*functionToBenchmark)(void*), void* data)
         {
             timespec benchmarkStartTime, benchmarkEndTime;
             clock_gettime(CLOCK_MONOTONIC, &benchmarkStartTime);
             clock_gettime(CLOCK_MONOTONIC, &benchmarkEndTime);
             while (benchmarkEndTime.tv_sec - benchmarkStartTime.tv_sec < limit)
             {
-                functionToBenchmark(size);
+                functionToBenchmark(data);
                 long long measuredTime = (stopTime.tv_sec - startTime.tv_sec) * NANOSECONDS_IN_SECOND +
                                                  (stopTime.tv_nsec - startTime.tv_nsec);
                 measuredTimes.push_back(measuredTime);
@@ -71,9 +45,9 @@ namespace Benchmarking
             }
         }
 
-        void run_benchmark_once(void (*functionToBenchmark)(int), int size)
+        void run_benchmark_once(void (*functionToBenchmark)(void*), void* data)
         {
-            functionToBenchmark(size);
+            functionToBenchmark(data);
             long long measuredTime = (stopTime.tv_sec - startTime.tv_sec) * NANOSECONDS_IN_SECOND +
                                              (stopTime.tv_nsec - startTime.tv_nsec);
             measuredTimes.push_back(measuredTime);
@@ -90,6 +64,9 @@ namespace Benchmarking
 
         BootstrappingResults calculate_bootstrap_stats()
         {
+            // for randomized values
+            srand(time(NULL));
+
             std::vector<double> bootstrappedValues;
             for (int i = 0; i < BOOTSTRAP_CYCLES_COUNT; i++)
             {
@@ -129,7 +106,34 @@ namespace Benchmarking
         }
     }
 
-    void run(const char* name, void (*functionToBenchmark)(int), int size)
+    void init(int argc, char* argv[])
+    {
+        // for nice outputs
+        std::cout << std::fixed << std::setprecision(10);
+
+        if (argc != 3)
+        {
+            std::cout << "Wrong number of agruments given to program!" << std::endl;
+            return;
+        }
+
+        if (std::strcmp(argv[1], "time") == 0)
+        {
+            timeLimit = std::stoi(argv[2]);
+            profile = Profiles::TIME;
+        }
+        else if (std::strcmp(argv[1], "prec") == 0)
+        {
+            precisionLimit = std::stoi(argv[2]);
+            profile = Profiles::PRECISION;
+        }
+        else
+        {
+            std::cout << "Wrong parameter " << argv[1] << ", expected time or prec!" << std::endl;
+        }
+    }
+
+    void run(const char* name, void (*functionToBenchmark)(void* data), void* data)
     {
         measuredTimes.clear();
         BootstrappingResults bootstrapResults;
@@ -137,7 +141,7 @@ namespace Benchmarking
         if (profile == Profiles::TIME)
         {
             std::cout << "Running time benchmark..." << std::endl;
-            run_benchmark_for_time(timeLimit, functionToBenchmark, size);
+            run_benchmark_for_time(timeLimit, functionToBenchmark, data);
 
             std::cout << "Bootstrapping..." << std::endl;
             bootstrapResults = calculate_bootstrap_stats();
@@ -145,7 +149,7 @@ namespace Benchmarking
         else
         {
             std::cout << "Running precision benchmark..." << std::endl;
-            run_benchmark_for_time(PRECISION_INITIAL_TIME_LIMIT, functionToBenchmark, size);
+            run_benchmark_for_time(PRECISION_INITIAL_TIME_LIMIT, functionToBenchmark, data);
 
             bootstrapResults = calculate_bootstrap_stats();
             std::cout << "CI wanted diff = " << precisionLimit / 100.0 << std::endl;
@@ -153,13 +157,13 @@ namespace Benchmarking
             while (bootstrapResults.mCIHigh / bootstrapResults.mCILow >= (1.0 + precisionLimit / 100.0))
             {
                 std::cout << "Not enough precision, running one more benchmark..." << std::endl;
-                run_benchmark_once(functionToBenchmark, size);
+                run_benchmark_once(functionToBenchmark, data);
                 bootstrapResults = calculate_bootstrap_stats();
                 std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1<< std::endl;
             }
         }
 
-        std::cout << name << ", " << size << ", "
+        std::cout << name << ", " << 0 << ", "
                   << bootstrapResults.mCILow << ", "
                   << bootstrapResults.aCILow << ", "
                   << bootstrapResults.bootstrappedValuesAverage << ", "
@@ -177,25 +181,3 @@ namespace Benchmarking
         clock_gettime(CLOCK_MONOTONIC, &stopTime);
     }
 }
-
-void funcToBench(int times)
-{
-    Benchmarking::start();
-    std::string str;
-    for (int i = 0; i < times; i++)
-    {
-        str += "a";
-    }
-    str.erase(str.begin() + 1, str.end());
-    times = str.size();
-    Benchmarking::stop();
-}
-
-int main(int argc, char* argv[])
-{
-    Benchmarking::init(argc, argv);
-    Benchmarking::run("string benchmark", &funcToBench, 100000000);
-
-    return 0;
-}
-
