@@ -15,8 +15,6 @@ namespace Benchmarking
 {
     namespace
     {
-        #define TO_STR(x) #x
-
         enum class Profiles { TIME, PRECISION } profile = Profiles::TIME;
         int timeLimit = 5; // seconds
         int precisionLimit = 2; // percent
@@ -113,7 +111,8 @@ namespace Benchmarking
 
         if (argc != 3)
         {
-            std::cout << "Wrong number of agruments given to program!" << std::endl;
+            std::cout << "Wrong number of arguments given to program!" << std::endl;
+            std::cout << "Using default settings, time profile with limit " << timeLimit << " seconds." << std::endl;
             return;
         }
 
@@ -140,30 +139,30 @@ namespace Benchmarking
 
         if (profile == Profiles::TIME)
         {
-            std::cout << "Running time benchmark..." << std::endl;
+            // std::cout << "Running time benchmark..." << std::endl;
             run_benchmark_for_time(timeLimit, functionToBenchmark, data);
 
-            std::cout << "Bootstrapping..." << std::endl;
+            // std::cout << "Bootstrapping..." << std::endl;
             bootstrapResults = calculate_bootstrap_stats();
         }
         else
         {
-            std::cout << "Running precision benchmark..." << std::endl;
+            // std::cout << "Running precision benchmark..." << std::endl;
             run_benchmark_for_time(PRECISION_INITIAL_TIME_LIMIT, functionToBenchmark, data);
 
             bootstrapResults = calculate_bootstrap_stats();
-            std::cout << "CI wanted diff = " << precisionLimit / 100.0 << std::endl;
-            std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1 << std::endl;
+            // std::cout << "CI wanted diff = " << precisionLimit / 100.0 << std::endl;
+            // std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1 << std::endl;
             while (bootstrapResults.mCIHigh / bootstrapResults.mCILow >= (1.0 + precisionLimit / 100.0))
             {
-                std::cout << "Not enough precision, running one more benchmark..." << std::endl;
+                // std::cout << "Not enough precision, running one more benchmark..." << std::endl;
                 run_benchmark_once(functionToBenchmark, data);
                 bootstrapResults = calculate_bootstrap_stats();
-                std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1<< std::endl;
+                // std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1<< std::endl;
             }
         }
 
-        std::cout << name << ", " << 0 << ", "
+        std::cout << name << "," << ", "
                   << bootstrapResults.mCILow << ", "
                   << bootstrapResults.aCILow << ", "
                   << bootstrapResults.bootstrappedValuesAverage << ", "
