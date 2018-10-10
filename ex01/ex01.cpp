@@ -173,7 +173,7 @@ void benchmarkTests()
 	std::cout << "insert time PriorityBufferArray with n = 10 ... " <<
 		(double)(endTime - beginTime) / CLOCKS_PER_SEC << " seconds " << std::endl;
 
-	PriorityBufferArray<10> pbs10;
+	PriorityBufferSet<10> pbs10;
 	beginTime = std::clock();
 	for (int x : randomNumbers)
 		pbs10.insert(x);
