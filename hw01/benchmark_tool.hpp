@@ -106,9 +106,6 @@ namespace Benchmarking
 
     void init(int argc, char* argv[])
     {
-        // for nice outputs
-        std::cout << std::fixed << std::setprecision(10);
-
         if (argc != 3)
         {
             std::cout << "Wrong number of arguments given to program!" << std::endl;
@@ -134,7 +131,9 @@ namespace Benchmarking
 
     void run(const char* name, void (*functionToBenchmark)(void* data), void* data)
     {
-        measuredTimes.clear();
+        // for nice outputs
+        std::cout << std::fixed << std::setprecision(10);
+
         BootstrappingResults bootstrapResults;
 
         if (profile == Profiles::TIME)
@@ -168,6 +167,7 @@ namespace Benchmarking
                   << bootstrapResults.bootstrappedValuesAverage << ", "
                   << bootstrapResults.mCIHigh << ", "
                   << bootstrapResults.aCIHigh << std::endl;
+        measuredTimes.clear();
     }
 
     void start()
