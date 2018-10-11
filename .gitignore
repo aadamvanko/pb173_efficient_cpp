@@ -37,3 +37,5 @@ hw4
 hw5
 ex1
 ex3
+build-*
+*.user
