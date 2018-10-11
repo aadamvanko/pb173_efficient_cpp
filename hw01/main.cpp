@@ -5,7 +5,7 @@ void benchmark_priority_buffer_array_5(void* data)
 {
     std::vector<int>& randomNumbers = *(std::vector<int>*)data;
     PriorityBufferArray<5> pba5;
-    Benchmarking::size_info(std::to_string(5));
+    Benchmarking::size_info("container_capacity=" + std::to_string(5) + ", inserts_count=" + std::to_string(randomNumbers.size()));
     Benchmarking::start();
     for (int x : randomNumbers)
         pba5.insert(x);
@@ -16,7 +16,7 @@ void benchmark_priority_buffer_array_10(void* data)
 {
     std::vector<int>& randomNumbers = *(std::vector<int>*)data;
     PriorityBufferArray<10> pba10;
-    Benchmarking::size_info(std::to_string(10));
+    Benchmarking::size_info("container_capacity=" + std::to_string(10) + ", inserts_count=" + std::to_string(randomNumbers.size()));
     Benchmarking::start();
     for (int x : randomNumbers)
         pba10.insert(x);
@@ -27,7 +27,7 @@ void benchmark_priority_buffer_array_10000(void* data)
 {
     std::vector<int>& randomNumbers = *(std::vector<int>*)data;
     PriorityBufferArray<10000> pba10000;
-    Benchmarking::size_info(std::to_string(10000));
+    Benchmarking::size_info("container_capacity=" + std::to_string(10000) + ", inserts_count=" + std::to_string(randomNumbers.size()));
     Benchmarking::start();
     for (int x : randomNumbers)
         pba10000.insert(x);
@@ -38,7 +38,7 @@ void benchmark_priority_buffer_set_5(void* data)
 {
     std::vector<int>& randomNumbers = *(std::vector<int>*)data;
     PriorityBufferSet<5> pbs5;
-    Benchmarking::size_info(std::to_string(5));
+    Benchmarking::size_info("container_capacity=" + std::to_string(5) + ", inserts_count=" + std::to_string(randomNumbers.size()));
     Benchmarking::start();
     for (int x : randomNumbers)
         pbs5.insert(x);
@@ -49,7 +49,7 @@ void benchmark_priority_buffer_set_10(void* data)
 {
     std::vector<int>& randomNumbers = *(std::vector<int>*)data;
     PriorityBufferSet<10> pbs10;
-    Benchmarking::size_info(std::to_string(10));
+    Benchmarking::size_info("container_capacity=" + std::to_string(10) + ", inserts_count=" + std::to_string(randomNumbers.size()));
     Benchmarking::start();
     for (int x : randomNumbers)
         pbs10.insert(x);
@@ -60,7 +60,7 @@ void benchmark_priority_buffer_set_10000(void* data)
 {
     std::vector<int>& randomNumbers = *(std::vector<int>*)data;
     PriorityBufferSet<10000> pbs10000;
-    Benchmarking::size_info(std::to_string(10000));
+    Benchmarking::size_info("container_capacity=" + std::to_string(10000) + ", inserts_count=" + std::to_string(randomNumbers.size()));
     Benchmarking::start();
     for (int x : randomNumbers)
         pbs10000.insert(x);
