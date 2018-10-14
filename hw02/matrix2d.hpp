@@ -73,50 +73,36 @@ public:
         int subMatrixA[BLOCK_SIZE][BLOCK_SIZE];
         int subMatrixB[BLOCK_SIZE][BLOCK_SIZE];
 
-        // going through matrixA
-        for (int blockAY = 0; blockAY < blockCount; blockAY++)
+        for (int resBlockY = 0; resBlockY < blockCount; resBlockY++)
         {
-            for (int blockAX = 0; blockAX < blockCount; blockAX++)
+            for (int resBlockX = 0; resBlockX < blockCount; resBlockX++)
             {
-                for (int i = 0; i < BLOCK_SIZE; i++)
+                for (int blockIndex = 0; blockIndex < blockCount; blockIndex++)
                 {
-                    for (int j = 0; j < BLOCK_SIZE; j++)
+                    for (int i = 0; i < BLOCK_SIZE; i++)
                     {
-                        subMatrixA[i][j] = m_data[blockAY * BLOCK_SIZE + i][blockAX * BLOCK_SIZE + j];
-                    }
-                }
-
-                // going through matrixB
-                for (int blockBY = 0; blockBY < blockCount; blockBY++)
-                {
-                    for (int blockBX = 0; blockBX < blockCount; blockBX++)
-                    {
-                        for (int i = 0; i < BLOCK_SIZE; i++)
+                        for (int j = 0; j < BLOCK_SIZE; j++)
                         {
-                            for (int j = 0; j < BLOCK_SIZE; j++)
-                            {
-                                subMatrixB[i][j] = other.m_data[blockBY * BLOCK_SIZE + i][blockBX * BLOCK_SIZE + j];
-                            }
+                            subMatrixA[i][j] = m_data[resBlockY * BLOCK_SIZE + i][blockIndex * BLOCK_SIZE + j];
+                            subMatrixB[i][j] = other.m_data[blockIndex * BLOCK_SIZE + i][resBlockX * BLOCK_SIZE + j];
                         }
+                    }
 
-                        // multiplication
-                        for (int i = 0; i < BLOCK_SIZE; i++)
+                    for (int i = 0; i < BLOCK_SIZE; i++)
+                    {
+                        for (int j = 0; j < BLOCK_SIZE; j++)
                         {
-                            for (int j = 0; j < BLOCK_SIZE; j++)
+                            RealType sum = 0;
+                            for (int k = 0; k < BLOCK_SIZE; k++)
                             {
-                                RealType sum = 0;
-                                for (int k = 0; k < BLOCK_SIZE; k++)
-                                {
-                                    sum += subMatrixA[i][k] * subMatrixB[k][j];
-                                }
-                                result.m_data[blockBY * BLOCK_SIZE + i][blockBX * BLOCK_SIZE + j] += sum;
+                                sum += subMatrixA[i][k] * subMatrixB[k][j];
                             }
+                            result.m_data[resBlockY * BLOCK_SIZE + i][resBlockX * BLOCK_SIZE + j] += sum;
                         }
                     }
                 }
             }
         }
-
 
         return result;
     }

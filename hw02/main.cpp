@@ -75,17 +75,17 @@ int main(int argc, char** argv)
     {
         benchmarkData.matrixA = generateRandomMatrix(generator, size);
         benchmarkData.matrixB = generateRandomMatrix(generator, size);
-
+/*
         benchmarkData.matrixA.print(std::cout);
         std::cout << std::endl;
         benchmarkData.matrixB.print(std::cout);
         std::cout << std::endl;
-
+*/
         Matrix2D correctResult = benchmarkData.matrixA.naiveMultiplication(benchmarkData.matrixB);
         //correctResult.print(std::cout);
 
         auto cachedResult = benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB);
-        cachedResult.print(std::cout);
+        //cachedResult.print(std::cout);
         if (correctResult != benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB))
         {
             std::cout << "ERROR IN MULTIPLICATION OF cacheEfficient!" << std::endl;
