@@ -12,6 +12,8 @@ private:
     std::vector<std::vector<RealType>> m_data;
 
 public:
+    Matrix2D() = default;
+
     Matrix2D(int rows, int cols) :
         m_data(std::vector<std::vector<RealType>>(rows, std::vector<RealType>(cols, 0)))
     {
@@ -22,6 +24,14 @@ public:
     }
 
     size_t size() const { return m_data.size(); }
+
+    bool operator==(const Matrix2D& rhs){ return m_data == rhs.m_data; }
+    bool operator!=(const Matrix2D& rhs){ return !(*this == rhs); }
+
+    std::vector<RealType>& operator[](int row)
+    {
+        return m_data[row];
+    }
 
     void print(std::ostream& os)
     {
@@ -36,7 +46,7 @@ public:
         }
     }
 
-    Matrix2D naiveMultiplication(const Matrix2D& other)
+    Matrix2D naiveMultiplication(const Matrix2D& other) const
     {
         Matrix2D result(m_data.size(), other.m_data[0].size());
         size_t size = m_data.size();
@@ -53,7 +63,7 @@ public:
         return result;
     }
 
-    Matrix2D cacheEfficientMultiplication(const Matrix2D& other)
+    Matrix2D cacheEfficientMultiplication(const Matrix2D& other) const
     {
         Matrix2D result(m_data.size(), other.m_data[0].size());
         size_t size = m_data.size();
@@ -61,10 +71,12 @@ public:
         {
             for (int j = 0; j < size; j++)
             {
+                RealType sum = 0;
                 for (int k = 0; k < size; k++)
                 {
-                    result.m_data[i][j] += m_data[i][k] * other.m_data[k][i];
+                    sum += m_data[i][k] * other.m_data[k][i];
                 }
+                result.m_data[i][j] = sum;
             }
         }
 
