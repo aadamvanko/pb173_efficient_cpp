@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     std::uniform_int_distribution<> dist(0, 1);
 
     BenchmarkData benchmarkData;
-    for (int size = 4; size <= 128; size *= 2)
+    for (int size = 128; size <= 128; size *= 2)
     {
         benchmarkData.matrixA = generateRandomMatrix(generator, size);
         benchmarkData.matrixB = generateRandomMatrix(generator, size);
@@ -81,9 +81,9 @@ int main(int argc, char** argv)
         benchmarkData.matrixB.print(std::cout);
         std::cout << std::endl;
 */
-        Matrix2D correctResult = benchmarkData.matrixA.naiveMultiplication(benchmarkData.matrixB);
+        //Matrix2D correctResult = benchmarkData.matrixA.naiveMultiplication(benchmarkData.matrixB);
         //correctResult.print(std::cout);
-
+/*
         auto cachedResult = benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB);
         //cachedResult.print(std::cout);
         if (correctResult != benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB))
@@ -94,10 +94,10 @@ int main(int argc, char** argv)
         {
             std::cout << "ERROR IN MULTIPLICATION OF transposed!" << std::endl;
         }
-
-        BENCHMARKING_RUN(naive, &benchmarkData);
+*/
+        //BENCHMARKING_RUN(naive, &benchmarkData);
         BENCHMARKING_RUN(cache_eff, &benchmarkData);
-        BENCHMARKING_RUN(transposed, &benchmarkData);
+        //BENCHMARKING_RUN(transposed, &benchmarkData);
     }
 
     return 0;

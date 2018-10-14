@@ -68,26 +68,15 @@ public:
     {
         Matrix2D result(m_data.size(), other.m_data[0].size());
         size_t size = m_data.size();
-        constexpr int BLOCK_SIZE = 4;
+        constexpr int BLOCK_SIZE = 8;
         const int blockCount = size / BLOCK_SIZE;
-        int subMatrixA[BLOCK_SIZE][BLOCK_SIZE];
-        int subMatrixB[BLOCK_SIZE][BLOCK_SIZE];
 
-        for (int resBlockY = 0; resBlockY < blockCount; resBlockY++)
+        for (int resBlockY = 0; resBlockY < size; resBlockY += BLOCK_SIZE)
         {
-            for (int resBlockX = 0; resBlockX < blockCount; resBlockX++)
+            for (int resBlockX = 0; resBlockX < size; resBlockX += BLOCK_SIZE)
             {
-                for (int blockIndex = 0; blockIndex < blockCount; blockIndex++)
+                for (int blockIndex = 0; blockIndex < size; blockIndex += BLOCK_SIZE)
                 {
-                    for (int i = 0; i < BLOCK_SIZE; i++)
-                    {
-                        for (int j = 0; j < BLOCK_SIZE; j++)
-                        {
-                            subMatrixA[i][j] = m_data[resBlockY * BLOCK_SIZE + i][blockIndex * BLOCK_SIZE + j];
-                            subMatrixB[i][j] = other.m_data[blockIndex * BLOCK_SIZE + i][resBlockX * BLOCK_SIZE + j];
-                        }
-                    }
-
                     for (int i = 0; i < BLOCK_SIZE; i++)
                     {
                         for (int j = 0; j < BLOCK_SIZE; j++)
@@ -95,9 +84,10 @@ public:
                             RealType sum = 0;
                             for (int k = 0; k < BLOCK_SIZE; k++)
                             {
-                                sum += subMatrixA[i][k] * subMatrixB[k][j];
+                                sum += m_data[resBlockY + i][blockIndex + k] *
+                                       other.m_data[blockIndex + k][resBlockX + j];
                             }
-                            result.m_data[resBlockY * BLOCK_SIZE + i][resBlockX * BLOCK_SIZE + j] += sum;
+                            result.m_data[resBlockY + i][resBlockX + j] += sum;
                         }
                     }
                 }
