@@ -41,6 +41,7 @@ public:
             for (auto cell : row)
             {
                 os << (first ? "" : " ") << cell;
+                first = false;
             }
             os << std::endl;
         }
@@ -48,7 +49,7 @@ public:
 
     Matrix2D naiveMultiplication(const Matrix2D& other) const
     {
-        Matrix2D result(m_data.size(), other.m_data[0].size());
+        Matrix2D result(m_data.size(), m_data.size());
         size_t size = m_data.size();
         for (int i = 0; i < size; i++)
         {
@@ -56,7 +57,7 @@ public:
             {
                 for (int k = 0; k < size; k++)
                 {
-                    result.m_data[i][j] += m_data[i][k] * other.m_data[k][i];
+                    result.m_data[i][j] += m_data[i][k] * other.m_data[k][j];
                 }
             }
         }
@@ -67,6 +68,73 @@ public:
     {
         Matrix2D result(m_data.size(), other.m_data[0].size());
         size_t size = m_data.size();
+        constexpr int BLOCK_SIZE = 4;
+        const int blockCount = size / BLOCK_SIZE;
+        int subMatrixA[BLOCK_SIZE][BLOCK_SIZE];
+        int subMatrixB[BLOCK_SIZE][BLOCK_SIZE];
+
+        // going through matrixA
+        for (int blockAY = 0; blockAY < blockCount; blockAY++)
+        {
+            for (int blockAX = 0; blockAX < blockCount; blockAX++)
+            {
+                for (int i = 0; i < BLOCK_SIZE; i++)
+                {
+                    for (int j = 0; j < BLOCK_SIZE; j++)
+                    {
+                        subMatrixA[i][j] = m_data[blockAY * BLOCK_SIZE + i][blockAX * BLOCK_SIZE + j];
+                    }
+                }
+
+                // going through matrixB
+                for (int blockBY = 0; blockBY < blockCount; blockBY++)
+                {
+                    for (int blockBX = 0; blockBX < blockCount; blockBX++)
+                    {
+                        for (int i = 0; i < BLOCK_SIZE; i++)
+                        {
+                            for (int j = 0; j < BLOCK_SIZE; j++)
+                            {
+                                subMatrixB[i][j] = other.m_data[blockBY * BLOCK_SIZE + i][blockBX * BLOCK_SIZE + j];
+                            }
+                        }
+
+                        // multiplication
+                        for (int i = 0; i < BLOCK_SIZE; i++)
+                        {
+                            for (int j = 0; j < BLOCK_SIZE; j++)
+                            {
+                                RealType sum = 0;
+                                for (int k = 0; k < BLOCK_SIZE; k++)
+                                {
+                                    sum += subMatrixA[i][k] * subMatrixB[k][j];
+                                }
+                                result.m_data[blockBY * BLOCK_SIZE + i][blockBX * BLOCK_SIZE + j] += sum;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        return result;
+    }
+
+    Matrix2D transposedMultiplication(const Matrix2D& other) const
+    {
+        Matrix2D result(m_data.size(), other.m_data[0].size());
+        size_t size = m_data.size();
+
+        Matrix2D transposed(size, size);
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                transposed.m_data[i][j] = other.m_data[j][i];
+            }
+        }
+
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
@@ -74,7 +142,7 @@ public:
                 RealType sum = 0;
                 for (int k = 0; k < size; k++)
                 {
-                    sum += m_data[i][k] * other.m_data[k][i];
+                    sum += m_data[i][k] * transposed.m_data[j][k];
                 }
                 result.m_data[i][j] = sum;
             }

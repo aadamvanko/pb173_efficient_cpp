@@ -50,6 +50,18 @@ void cache_eff(void* data)
     s ^= s;
 }
 
+void transposed(void* data)
+{
+    const BenchmarkData& matrices = *(BenchmarkData*)data;
+
+    Benchmarking::size_info("size=" + std::to_string(matrices.matrixA.size()));
+    Benchmarking::start();
+    Matrix2D result = matrices.matrixA.transposedMultiplication(matrices.matrixB);
+    Benchmarking::stop();
+    auto s = result.size();
+    s ^= s;
+}
+
 int main(int argc, char** argv)
 {
     Benchmarking::init(argc, argv);
@@ -59,23 +71,33 @@ int main(int argc, char** argv)
     std::uniform_int_distribution<> dist(0, 1);
 
     BenchmarkData benchmarkData;
-    for (int size = 8; size <= 128; size *= 2)
+    for (int size = 4; size <= 128; size *= 2)
     {
         benchmarkData.matrixA = generateRandomMatrix(generator, size);
         benchmarkData.matrixB = generateRandomMatrix(generator, size);
 
-        // benchmarkData.matrixA.print(std::cout);
-        // std::cout << std::endl;
-        // benchmarkData.matrixB.print(std::cout);
+        benchmarkData.matrixA.print(std::cout);
+        std::cout << std::endl;
+        benchmarkData.matrixB.print(std::cout);
+        std::cout << std::endl;
 
-        if (benchmarkData.matrixA.naiveMultiplication(benchmarkData.matrixB) !=
-            benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB))
+        Matrix2D correctResult = benchmarkData.matrixA.naiveMultiplication(benchmarkData.matrixB);
+        //correctResult.print(std::cout);
+
+        auto cachedResult = benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB);
+        cachedResult.print(std::cout);
+        if (correctResult != benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB))
         {
-            std::cout << "ERROR IN MULTIPLICATION!" << std::endl;
+            std::cout << "ERROR IN MULTIPLICATION OF cacheEfficient!" << std::endl;
+        }
+        if (correctResult != benchmarkData.matrixA.transposedMultiplication(benchmarkData.matrixB))
+        {
+            std::cout << "ERROR IN MULTIPLICATION OF transposed!" << std::endl;
         }
 
         BENCHMARKING_RUN(naive, &benchmarkData);
         BENCHMARKING_RUN(cache_eff, &benchmarkData);
+        BENCHMARKING_RUN(transposed, &benchmarkData);
     }
 
     return 0;
