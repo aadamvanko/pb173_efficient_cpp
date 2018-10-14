@@ -83,13 +83,13 @@ int main(int argc, char* argv[])
         randomNumbers[i] = dist(rng);
     }
 
-    BENCHMARKING_RUN(benchmark_priority_buffer_array_5, &randomNumbers);
-    BENCHMARKING_RUN(benchmark_priority_buffer_array_10, &randomNumbers);
-    BENCHMARKING_RUN(benchmark_priority_buffer_array_10000, &randomNumbers);
+    Benchmarking::run("benchmark_priority_buffer_array", benchmark_priority_buffer_array_5, &randomNumbers);
+    Benchmarking::run("benchmark_priority_buffer_array", benchmark_priority_buffer_array_10, &randomNumbers);
+    Benchmarking::run("benchmark_priority_buffer_array", benchmark_priority_buffer_array_10000, &randomNumbers);
 
-    BENCHMARKING_RUN(benchmark_priority_buffer_set_5, &randomNumbers);
-    BENCHMARKING_RUN(benchmark_priority_buffer_set_10, &randomNumbers);
-    BENCHMARKING_RUN(benchmark_priority_buffer_set_10000, &randomNumbers);
+    Benchmarking::run("benchmark_priority_buffer_set", benchmark_priority_buffer_set_5, &randomNumbers);
+    Benchmarking::run("benchmark_priority_buffer_set", benchmark_priority_buffer_set_10, &randomNumbers);
+    Benchmarking::run("benchmark_priority_buffer_set", benchmark_priority_buffer_set_10000, &randomNumbers);
 
     return 0;
 }

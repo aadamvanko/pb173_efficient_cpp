@@ -136,7 +136,7 @@ namespace Benchmarking
         sizeInfo = str;
     }
 
-    void run(const char* name, void (*functionToBenchmark)(void* data), void* data)
+    void run(const std::string& benchmark_name, void (*functionToBenchmark)(void* data), void* data)
     {
         sizeInfo = "unknown size";
         BootstrappingResults bootstrapResults;
@@ -169,7 +169,7 @@ namespace Benchmarking
             }
         }
 
-        std::cout << name << ", "
+        std::cout << benchmark_name << ", "
                   << sizeInfo << ", "
                   << static_cast<long long>(bootstrapResults.mCILow * NANOSECONDS_IN_SECOND) << ", "
                   << static_cast<long long>(bootstrapResults.aCILow * NANOSECONDS_IN_SECOND) << ", "
