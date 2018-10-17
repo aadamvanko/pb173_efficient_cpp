@@ -20,7 +20,7 @@ public:
 		while (i < itemCnt && item > m_items[i])
 			i++;
 
-		if (i < MAX_SIZE && m_items[i] == item)
+        if (i < MAX_SIZE && i != itemCnt && m_items[i] == item)
 			return;
 
 		if (itemCnt == MAX_SIZE)
