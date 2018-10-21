@@ -64,11 +64,10 @@ public:
         return result;
     }
 
-    Matrix2D cacheEfficientMultiplication(const Matrix2D& other) const
+    Matrix2D cacheEfficientMultiplication(const Matrix2D& other, int BLOCK_SIZE) const
     {
         Matrix2D result(m_data.size(), other.m_data[0].size());
         size_t size = m_data.size();
-        constexpr int BLOCK_SIZE = 8;
         const int blockCount = size / BLOCK_SIZE;
 
         for (int resBlockY = 0; resBlockY < size; resBlockY += BLOCK_SIZE)

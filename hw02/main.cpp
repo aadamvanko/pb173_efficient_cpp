@@ -8,6 +8,7 @@ struct BenchmarkData
 {
     Matrix2D matrixA;
     Matrix2D matrixB;
+    int blockSize;
 };
 
 Matrix2D generateRandomMatrix(std::mt19937& generator, int size)
@@ -42,9 +43,10 @@ void cache_eff(void* data)
 {
     const BenchmarkData& matrices = *(BenchmarkData*)data;
 
-    Benchmarking::size_info("size=" + std::to_string(matrices.matrixA.size()));
+    Benchmarking::size_info("size=" + std::to_string(matrices.matrixA.size()) +
+                            ", block_size=" + std::to_string(matrices.blockSize));
     Benchmarking::start();
-    Matrix2D result = matrices.matrixA.cacheEfficientMultiplication(matrices.matrixB);
+    Matrix2D result = matrices.matrixA.cacheEfficientMultiplication(matrices.matrixB, matrices.blockSize);
     Benchmarking::stop();
     auto s = result.size();
     s ^= s;
@@ -71,33 +73,40 @@ int main(int argc, char** argv)
     std::uniform_int_distribution<> dist(0, 1);
 
     BenchmarkData benchmarkData;
-    for (int size = 128; size <= 128; size *= 2)
+    for (int size = 2; size <= 1024; size *= 2)
     {
         benchmarkData.matrixA = generateRandomMatrix(generator, size);
         benchmarkData.matrixB = generateRandomMatrix(generator, size);
-/*
-        benchmarkData.matrixA.print(std::cout);
-        std::cout << std::endl;
-        benchmarkData.matrixB.print(std::cout);
-        std::cout << std::endl;
-*/
-        //Matrix2D correctResult = benchmarkData.matrixA.naiveMultiplication(benchmarkData.matrixB);
+
+        auto correctResult = benchmarkData.matrixA.naiveMultiplication(benchmarkData.matrixB);
         //correctResult.print(std::cout);
-/*
-        auto cachedResult = benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB);
-        //cachedResult.print(std::cout);
-        if (correctResult != benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB))
-        {
-            std::cout << "ERROR IN MULTIPLICATION OF cacheEfficient!" << std::endl;
-        }
-        if (correctResult != benchmarkData.matrixA.transposedMultiplication(benchmarkData.matrixB))
+
+        auto transposedResult = benchmarkData.matrixA.transposedMultiplication(benchmarkData.matrixB);
+        if (correctResult != transposedResult)
         {
             std::cout << "ERROR IN MULTIPLICATION OF transposed!" << std::endl;
         }
-*/
-        //BENCHMARKING_RUN(naive, &benchmarkData);
-        BENCHMARKING_RUN(cache_eff, &benchmarkData);
-        //BENCHMARKING_RUN(transposed, &benchmarkData);
+
+        BENCHMARKING_RUN(naive, &benchmarkData);
+        BENCHMARKING_RUN(transposed, &benchmarkData);
+
+        for (int blockSize = 2; blockSize <= 64 && size % blockSize == 0; blockSize *= 2)
+        {
+            benchmarkData.blockSize = blockSize;
+    /*
+            benchmarkData.matrixA.print(std::cout);
+            std::cout << std::endl;
+            benchmarkData.matrixB.print(std::cout);
+            std::cout << std::endl;
+    */
+            auto efficientResult = benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB, blockSize);
+            // cachedResult.print(std::cout);
+            if (correctResult != efficientResult)
+            {
+                std::cout << "ERROR IN MULTIPLICATION OF cacheEfficient!" << std::endl;
+            }
+            BENCHMARKING_RUN(cache_eff, &benchmarkData);
+        }
     }
 
     return 0;
