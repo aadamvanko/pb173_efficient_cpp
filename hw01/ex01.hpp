@@ -60,6 +60,8 @@ public:
 
 		itemCnt--;
 	}
+
+    int capacity() const { return MAX_SIZE; }
 };
 
 template<int MAX_SIZE>
@@ -91,4 +93,6 @@ public:
 	{
 		m_items.erase(*m_items.rbegin());
 	}
+
+    int capacity() const { return MAX_SIZE; }
 };

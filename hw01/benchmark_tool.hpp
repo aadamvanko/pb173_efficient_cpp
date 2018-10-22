@@ -21,7 +21,7 @@ namespace Benchmarking
 
         const int BENCHMARK_COUNT_LIMIT = 10000; // due to very short benchmarks
         const int PRECISION_INITIAL_TIME_LIMIT = 5; // seconds
-        const int PRECISION_STEP_ADDITIONAL_BENCHMARKS = 10;
+        const int PRECISION_STEP_ADDITIONAL_BENCHMARKS = 2000;
         const int BOOTSTRAP_CYCLES_COUNT = 10000;
         const long long NANOSECONDS_IN_SECOND = 1000000000;
 
@@ -65,11 +65,13 @@ namespace Benchmarking
 
         BootstrappingResults calculate_bootstrap_stats()
         {
-            std::random_device randomDevice;
-            std::mt19937 generator(randomDevice());
+            std::mt19937 generator;
+            generator.seed(std::random_device()());
             std::uniform_int_distribution<> distribution(0, measuredTimes.size() - 1);
 
             std::vector<double> bootstrappedValues;
+            std::vector<long long> bootstrappedLowPercentiles;
+            std::vector<long long> bootstrappedHighPercentiles;
             for (int i = 0; i < BOOTSTRAP_CYCLES_COUNT; i++)
             {
                 std::vector<long long> selectedTimes;
@@ -83,26 +85,37 @@ namespace Benchmarking
                 long long sum = std::accumulate(selectedTimes.begin(), selectedTimes.end(), 0LL);
                 double average = sum / (double)NANOSECONDS_IN_SECOND / (double)selectedTimes.size(); // estimator
                 bootstrappedValues.push_back(average);
+
+                std::sort(selectedTimes.begin(), selectedTimes.end());
+                bootstrappedLowPercentiles.push_back(selectedTimes[static_cast<unsigned>(0.05 * selectedTimes.size())]);
+                bootstrappedHighPercentiles.push_back(selectedTimes[static_cast<unsigned>(0.95 * selectedTimes.size())]);
             }
 
             double bootstrappedValuesSum = std::accumulate(bootstrappedValues.begin(), bootstrappedValues.end(), 0.0);
             double bootstrappedValuesAverage = bootstrappedValuesSum / bootstrappedValues.size();
 
-            // for percentile finding
-            std::sort(bootstrappedValues.begin(), bootstrappedValues.end());
+            long long bootstrappedLowPercentilesSum = std::accumulate(bootstrappedLowPercentiles.begin(),
+                                                                       bootstrappedLowPercentiles.end(), 0LL);
+            long long bootstrappedHighPercentilesSum = std::accumulate(bootstrappedHighPercentiles.begin(),
+                                                                       bootstrappedHighPercentiles.end(), 0LL);
 
             // calculate standard deviation
-            double sd = std::sqrt(std::accumulate(bootstrappedValues.begin(), bootstrappedValues.end(), 0.0,
-                                        [bootstrappedValuesAverage](double computedSd, double bootstrappedValue)
+            double sumSquaredDifferences = 0.0;
+            for (const double value : bootstrappedValues)
             {
-                return computedSd + (bootstrappedValue - bootstrappedValuesAverage) * (bootstrappedValue - bootstrappedValuesAverage);
-            }) / bootstrappedValues.size());
+                sumSquaredDifferences += std::pow(value - bootstrappedValuesAverage, 2);
+            }
+            double sd = std::sqrt(sumSquaredDifferences / bootstrappedValues.size());
 
-            double mCILow = bootstrappedValues[unsigned(bootstrappedValues.size() * 0.05)];
+            double mCILow = bootstrappedLowPercentilesSum / static_cast<double>(bootstrappedLowPercentiles.size());
             double aCILow = bootstrappedValuesAverage - 2 * sd;
-            double mCIHigh = bootstrappedValues[unsigned(bootstrappedValues.size() * 0.95)];
+            double mCIHigh = bootstrappedHighPercentilesSum / static_cast<double>(bootstrappedHighPercentiles.size());
             double aCIHigh = bootstrappedValuesAverage + 2 * sd;
-            return { mCILow, aCILow, mCIHigh, aCIHigh, bootstrappedValuesAverage };
+            return { mCILow / static_cast<double>(NANOSECONDS_IN_SECOND),
+                        aCILow,
+                        mCIHigh / static_cast<double>(NANOSECONDS_IN_SECOND),
+                        aCIHigh,
+                        bootstrappedValuesAverage };
         }
     }
 
@@ -140,6 +153,7 @@ namespace Benchmarking
     {
         sizeInfo = "unknown size";
         BootstrappingResults bootstrapResults;
+        std::cout << std::fixed << std::setprecision(10);
 
         if (profile == Profiles::TIME)
         {
@@ -151,21 +165,29 @@ namespace Benchmarking
         }
         else
         {
-            // std::cout << "Running precision benchmark..." << std::endl;
+            //std::cout << "Running precision benchmark..." << std::endl;
             run_benchmark_for_time(PRECISION_INITIAL_TIME_LIMIT, functionToBenchmark, data);
 
             bootstrapResults = calculate_bootstrap_stats();
-            // std::cout << "CI wanted diff = " << precisionLimit / 100.0 << std::endl;
-            // std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1 << std::endl;
+            /*
+            std::cout << "CI wanted diff = " << precisionLimit / 100.0 << std::endl;
+            std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1 << std::endl;
+            std::cout << "mCILow = " << bootstrapResults.mCILow << std::endl;
+            std::cout << "mCIHigh = " << bootstrapResults.mCIHigh << std::endl;
+            */
             while (bootstrapResults.mCIHigh / bootstrapResults.mCILow >= (1.0 + precisionLimit / 100.0))
             {
                 // std::cout << "Not enough precision, running one more benchmark..." << std::endl;
-                for (int i = 0; i < PRECISION_STEP_ADDITIONAL_BENCHMARKS; i++)
+                for (int i = 0; i < PRECISION_STEP_ADDITIONAL_BENCHMARKS * 1000; i++)
                 {
                     run_benchmark_once(functionToBenchmark, data);
                 }
                 bootstrapResults = calculate_bootstrap_stats();
-                // std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1<< std::endl;
+                /*
+                std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1<< std::endl;
+                std::cout << "mCILow = " << bootstrapResults.mCILow << std::endl;
+                std::cout << "mCIHigh = " << bootstrapResults.mCIHigh << std::endl;
+                */
             }
         }
 

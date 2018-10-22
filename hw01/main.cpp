@@ -10,6 +10,8 @@ void benchmark_priority_buffer_array_5(void* data)
     for (int x : randomNumbers)
         pba5.insert(x);
     Benchmarking::stop();
+    volatile int s = pba5.capacity();
+    s ^= s;
 }
 
 void benchmark_priority_buffer_array_10(void* data)
@@ -21,6 +23,8 @@ void benchmark_priority_buffer_array_10(void* data)
     for (int x : randomNumbers)
         pba10.insert(x);
     Benchmarking::stop();
+    volatile int s = pba10.capacity();
+    s ^= s;
 }
 
 void benchmark_priority_buffer_array_10000(void* data)
@@ -32,6 +36,8 @@ void benchmark_priority_buffer_array_10000(void* data)
     for (int x : randomNumbers)
         pba10000.insert(x);
     Benchmarking::stop();
+    volatile int s = pba10000.capacity();
+    s ^= s;
 }
 
 void benchmark_priority_buffer_set_5(void* data)
@@ -43,6 +49,8 @@ void benchmark_priority_buffer_set_5(void* data)
     for (int x : randomNumbers)
         pbs5.insert(x);
     Benchmarking::stop();
+    volatile int s = pbs5.capacity();
+    s ^= s;
 }
 
 void benchmark_priority_buffer_set_10(void* data)
@@ -54,6 +62,8 @@ void benchmark_priority_buffer_set_10(void* data)
     for (int x : randomNumbers)
         pbs10.insert(x);
     Benchmarking::stop();
+    volatile int s = pbs10.capacity();
+    s ^= s;
 }
 
 void benchmark_priority_buffer_set_10000(void* data)
@@ -65,6 +75,8 @@ void benchmark_priority_buffer_set_10000(void* data)
     for (int x : randomNumbers)
         pbs10000.insert(x);
     Benchmarking::stop();
+    volatile int s = pbs10000.capacity();
+    s ^= s;
 }
 
 int main(int argc, char* argv[])
