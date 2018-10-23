@@ -178,7 +178,7 @@ namespace Benchmarking
             while (bootstrapResults.mCIHigh / bootstrapResults.mCILow >= (1.0 + precisionLimit / 100.0))
             {
                 // std::cout << "Not enough precision, running one more benchmark..." << std::endl;
-                for (int i = 0; i < PRECISION_STEP_ADDITIONAL_BENCHMARKS * 1000; i++)
+                for (int i = 0; i < PRECISION_STEP_ADDITIONAL_BENCHMARKS; i++)
                 {
                     run_benchmark_once(functionToBenchmark, data);
                 }
