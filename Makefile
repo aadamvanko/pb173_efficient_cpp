@@ -10,3 +10,6 @@ ex3: ex03/main.cpp
 
 hw1: hw01/main.cpp
 	$(CXX) $(CXXFLAGS) -o hw1 hw01/main.cpp
+	
+hw2: hw02/main.cpp
+	$(CXX) $(CXXFLAGS) -o hw2 hw02/main.cpp
