@@ -69,7 +69,7 @@ int main(int argc, char** argv)
         auto correctResult = benchmarkData.matrixA.naiveMultiplication(benchmarkData.matrixB);
         BENCHMARKING_RUN(naive, &benchmarkData);
 
-        for (int blockSize = 2; blockSize <= 64 && size % blockSize == 0; blockSize *= 2)
+        for (int blockSize = 2; blockSize <= 256 && size % blockSize == 0; blockSize *= 2)
         {
             benchmarkData.blockSize = blockSize;
             auto efficientResult = benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB, blockSize);
