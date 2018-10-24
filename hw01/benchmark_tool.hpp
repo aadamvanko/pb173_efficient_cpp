@@ -16,12 +16,14 @@ namespace Benchmarking
     namespace
     {
         enum class Profiles { TIME, PRECISION } profile = Profiles::TIME;
-        int timeLimit = 5; // seconds
-        int precisionLimit = 2; // percent
+        int timeModeTimeLimit = 5; // seconds
+        int precisionModePrecisionLimit = 20; // percent
 
-        const int BENCHMARK_COUNT_LIMIT = 10000; // due to very short benchmarks
+        const int TIME_BENCHMARK_COUNT_LIMIT = 10000; // due to very short benchmarks
         const int PRECISION_INITIAL_TIME_LIMIT = 5; // seconds
-        const int PRECISION_STEP_ADDITIONAL_BENCHMARKS = 2000;
+        const int PRECISION_STEP_ADDITIONAL_TIME_LIMIT = 3; // seconds
+        const int PRECISION_STEP_ADDITIONAL_BENCHMARK_LIMIT = 5000; // due to very short benchmarks
+        const int PRECISION_ADDITIONL_STEPS_COUNT = 10; // steps/cycles
         const int BOOTSTRAP_CYCLES_COUNT = 10000;
         const long long NANOSECONDS_IN_SECOND = 1000000000;
 
@@ -31,24 +33,31 @@ namespace Benchmarking
         std::vector<long long> measuredTimes;
         std::string sizeInfo;
 
-        void run_benchmark_once(void (*functionToBenchmark)(void*), void* data)
+        void idle()
         {
-            functionToBenchmark(data);
-            long long measuredTime = (stopTime.tv_sec - startTime.tv_sec) * NANOSECONDS_IN_SECOND +
-                                             (stopTime.tv_nsec - startTime.tv_nsec);
-            measuredTimes.push_back(measuredTime);
+            volatile int idleCounter = 0;
+            for (int i = 0; i < 100000000; i++)
+            {
+                idleCounter++;
+            }
+            idleCounter ^= idleCounter;
         }
 
-        void run_benchmark_for_time(int limit, void (*functionToBenchmark)(void*), void* data)
+        void run_benchmark_for_time(const int timeLimit, void (*functionToBenchmark)(void*), void* data, const int benchmarkCountLimit)
         {
+            idle(); // anti frequency scaling
+
             timespec benchmarkStartTime, benchmarkEndTime;
             clock_gettime(CLOCK_MONOTONIC, &benchmarkStartTime);
             clock_gettime(CLOCK_MONOTONIC, &benchmarkEndTime);
             int benchmarkCount = 0;
             functionToBenchmark(data); // cold start
-            while (benchmarkEndTime.tv_sec - benchmarkStartTime.tv_sec < limit && benchmarkCount < BENCHMARK_COUNT_LIMIT)
+            while (benchmarkEndTime.tv_sec - benchmarkStartTime.tv_sec < timeLimit && benchmarkCount < benchmarkCountLimit)
             {
-                run_benchmark_once(functionToBenchmark, data);
+                functionToBenchmark(data);
+                long long measuredTime = (stopTime.tv_sec - startTime.tv_sec) * NANOSECONDS_IN_SECOND +
+                                                 (stopTime.tv_nsec - startTime.tv_nsec);
+                measuredTimes.push_back(measuredTime);
                 clock_gettime(CLOCK_MONOTONIC, &benchmarkEndTime);
                 benchmarkCount++;
             }
@@ -117,16 +126,6 @@ namespace Benchmarking
                         aCIHigh,
                         bootstrappedValuesAverage };
         }
-
-	void idle()
-	{
-		volatile int idleCounter = 0;
-		for (int i = 0; i < 100000000; i++)
-		{
-			idleCounter++;
-		}
-		idleCounter ^= idleCounter;
-	}
     }
 
     void init(int argc, char* argv[])
@@ -134,18 +133,18 @@ namespace Benchmarking
         if (argc != 3)
         {
             std::cout << "Wrong number of arguments given to program!" << std::endl;
-            std::cout << "Using default settings, time profile with limit " << timeLimit << " seconds and maximal number of benchmarks " << BENCHMARK_COUNT_LIMIT << "." << std::endl;
+            std::cout << "Using default settings, time profile with limit " << timeModeTimeLimit << " seconds and maximal number of benchmarks " << TIME_BENCHMARK_COUNT_LIMIT << "." << std::endl;
             return;
         }
 
         if (std::strcmp(argv[1], "time") == 0)
         {
-            timeLimit = std::stoi(argv[2]);
+            timeModeTimeLimit = std::stoi(argv[2]);
             profile = Profiles::TIME;
         }
         else if (std::strcmp(argv[1], "prec") == 0)
         {
-            precisionLimit = std::stoi(argv[2]);
+            precisionModePrecisionLimit = std::stoi(argv[2]);
             profile = Profiles::PRECISION;
         }
         else
@@ -165,12 +164,10 @@ namespace Benchmarking
         BootstrappingResults bootstrapResults;
         std::cout << std::fixed << std::setprecision(10);
 
-	idle(); // anti frequency scaling
-
         if (profile == Profiles::TIME)
         {
             // std::cout << "Running time benchmark..." << std::endl;
-            run_benchmark_for_time(timeLimit, functionToBenchmark, data);
+            run_benchmark_for_time(timeModeTimeLimit, functionToBenchmark, data, TIME_BENCHMARK_COUNT_LIMIT);
 
             // std::cout << "Bootstrapping..." << std::endl;
             bootstrapResults = calculate_bootstrap_stats();
@@ -178,28 +175,43 @@ namespace Benchmarking
         else
         {
             //std::cout << "Running precision benchmark..." << std::endl;
-            run_benchmark_for_time(PRECISION_INITIAL_TIME_LIMIT, functionToBenchmark, data);
+            run_benchmark_for_time(PRECISION_INITIAL_TIME_LIMIT, functionToBenchmark, data, TIME_BENCHMARK_COUNT_LIMIT);
 
             bootstrapResults = calculate_bootstrap_stats();
-            /*
-            std::cout << "CI wanted diff = " << precisionLimit / 100.0 << std::endl;
-            std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1 << std::endl;
-            std::cout << "mCILow = " << bootstrapResults.mCILow << std::endl;
-            std::cout << "mCIHigh = " << bootstrapResults.mCIHigh << std::endl;
-            */
-            while (bootstrapResults.mCIHigh / bootstrapResults.mCILow >= (1.0 + precisionLimit / 100.0))
+
+            std::cout << "CI wanted diff = " << precisionModePrecisionLimit / 100.0 << ", "
+                        << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1 << ", "
+                        << "mCILow = " << bootstrapResults.mCILow << ", "
+                        << "mCIHigh = " << bootstrapResults.mCIHigh << std::endl;
+
+            double diff_5 = bootstrapResults.bootstrappedValuesAverage - bootstrapResults.mCILow;
+            double diff_95 = bootstrapResults.mCIHigh - bootstrapResults.bootstrappedValuesAverage;
+            double CI_limit = bootstrapResults.bootstrappedValuesAverage * precisionModePrecisionLimit / 100;
+
+            if (diff_5 > CI_limit || diff_95 > CI_limit)
             {
-                // std::cout << "Not enough precision, running one more benchmark..." << std::endl;
-                for (int i = 0; i < PRECISION_STEP_ADDITIONAL_BENCHMARKS; i++)
+                int i = 0;
+                for (; i < PRECISION_ADDITIONL_STEPS_COUNT; i++)
                 {
-                    run_benchmark_once(functionToBenchmark, data);
+                    // std::cout << "Not enough precision, running one more benchmark..." << std::endl;
+                    run_benchmark_for_time(PRECISION_STEP_ADDITIONAL_TIME_LIMIT, functionToBenchmark, data, PRECISION_STEP_ADDITIONAL_BENCHMARK_LIMIT);
+                    bootstrapResults = calculate_bootstrap_stats();
+
+                    std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1 << ", "
+                              << "mCILow = " << bootstrapResults.mCILow << ", "
+                              << "mCIHigh = " << bootstrapResults.mCIHigh << std::endl;
+
+                    if (diff_5 > CI_limit || diff_95 > CI_limit)
+                    {
+                        // good enough precision
+                        break;
+                    }
                 }
-                bootstrapResults = calculate_bootstrap_stats();
-                /*
-                std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1<< std::endl;
-                std::cout << "mCILow = " << bootstrapResults.mCILow << std::endl;
-                std::cout << "mCIHigh = " << bootstrapResults.mCIHigh << std::endl;
-                */
+
+                if (i == PRECISION_ADDITIONL_STEPS_COUNT)
+                {
+                    std::cout << "TIMED OUT, ";
+                }
             }
         }
 
