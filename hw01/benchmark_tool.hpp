@@ -196,8 +196,8 @@ namespace Benchmarking
                   << static_cast<long long>(bootstrapResults.mCILow * NANOSECONDS_IN_SECOND) << ", "
                   << static_cast<long long>(bootstrapResults.aCILow * NANOSECONDS_IN_SECOND) << ", "
                   << static_cast<long long>(bootstrapResults.bootstrappedValuesAverage * NANOSECONDS_IN_SECOND) << ", "
-                  << static_cast<long long>(bootstrapResults.mCIHigh * NANOSECONDS_IN_SECOND) << ", "
-                  << static_cast<long long>(bootstrapResults.aCIHigh * NANOSECONDS_IN_SECOND) << std::endl;
+                  << static_cast<long long>(bootstrapResults.aCIHigh * NANOSECONDS_IN_SECOND) << ", "
+		  << static_cast<long long>(bootstrapResults.mCIHigh * NANOSECONDS_IN_SECOND) << std::endl;
         measuredTimes.clear();
     }
 
