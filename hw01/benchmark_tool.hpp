@@ -117,6 +117,16 @@ namespace Benchmarking
                         aCIHigh,
                         bootstrappedValuesAverage };
         }
+
+	void idle()
+	{
+		volatile int idleCounter = 0;
+		for (int i = 0; i < 100000000; i++)
+		{
+			idleCounter++;
+		}
+		idleCounter ^= idleCounter;
+	}
     }
 
     void init(int argc, char* argv[])
@@ -154,6 +164,8 @@ namespace Benchmarking
         sizeInfo = "unknown size";
         BootstrappingResults bootstrapResults;
         std::cout << std::fixed << std::setprecision(10);
+
+	idle(); // anti frequency scaling
 
         if (profile == Profiles::TIME)
         {
@@ -198,6 +210,7 @@ namespace Benchmarking
                   << static_cast<long long>(bootstrapResults.bootstrappedValuesAverage * NANOSECONDS_IN_SECOND) << ", "
                   << static_cast<long long>(bootstrapResults.aCIHigh * NANOSECONDS_IN_SECOND) << ", "
 		  << static_cast<long long>(bootstrapResults.mCIHigh * NANOSECONDS_IN_SECOND) << std::endl;
+
         measuredTimes.clear();
     }
 
