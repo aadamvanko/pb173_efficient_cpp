@@ -96,35 +96,6 @@ public:
         return result;
     }
 
-    Matrix2D transposedMultiplication(const Matrix2D& other) const
-    {
-        Matrix2D result(m_data.size(), other.m_data[0].size());
-        size_t size = m_data.size();
-
-        Matrix2D transposed(size, size);
-        for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                transposed.m_data[i][j] = other.m_data[j][i];
-            }
-        }
-
-        for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                RealType sum = 0;
-                for (int k = 0; k < size; k++)
-                {
-                    sum += m_data[i][k] * transposed.m_data[j][k];
-                }
-                result.m_data[i][j] = sum;
-            }
-        }
-
-        return result;
-    }
 };
 
 #endif // MATRIX2D_HPP

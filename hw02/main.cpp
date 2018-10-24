@@ -52,18 +52,6 @@ void cache_eff(void* data)
     s ^= s;
 }
 
-void transposed(void* data)
-{
-    const BenchmarkData& matrices = *(BenchmarkData*)data;
-
-    Benchmarking::size_info("size=" + std::to_string(matrices.matrixA.size()));
-    Benchmarking::start();
-    Matrix2D result = matrices.matrixA.transposedMultiplication(matrices.matrixB);
-    Benchmarking::stop();
-    auto s = result.size();
-    s ^= s;
-}
-
 int main(int argc, char** argv)
 {
     Benchmarking::init(argc, argv);
@@ -79,26 +67,11 @@ int main(int argc, char** argv)
         benchmarkData.matrixB = generateRandomMatrix(generator, size);
 
         auto correctResult = benchmarkData.matrixA.naiveMultiplication(benchmarkData.matrixB);
-        //correctResult.print(std::cout);
-
-        auto transposedResult = benchmarkData.matrixA.transposedMultiplication(benchmarkData.matrixB);
-        if (correctResult != transposedResult)
-        {
-            std::cout << "ERROR IN MULTIPLICATION OF transposed!" << std::endl;
-        }
-
         BENCHMARKING_RUN(naive, &benchmarkData);
-        BENCHMARKING_RUN(transposed, &benchmarkData);
 
         for (int blockSize = 2; blockSize <= 64 && size % blockSize == 0; blockSize *= 2)
         {
             benchmarkData.blockSize = blockSize;
-    /*
-            benchmarkData.matrixA.print(std::cout);
-            std::cout << std::endl;
-            benchmarkData.matrixB.print(std::cout);
-            std::cout << std::endl;
-    */
             auto efficientResult = benchmarkData.matrixA.cacheEfficientMultiplication(benchmarkData.matrixB, blockSize);
             // cachedResult.print(std::cout);
             if (correctResult != efficientResult)
