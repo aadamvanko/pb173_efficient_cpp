@@ -36,7 +36,7 @@ namespace Benchmarking
         void idle()
         {
             volatile int idleCounter = 0;
-            for (int i = 0; i < 100000000; i++)
+            for (int i = 0; i < 1000000000; i++)
             {
                 idleCounter++;
             }
@@ -178,17 +178,17 @@ namespace Benchmarking
             run_benchmark_for_time(PRECISION_INITIAL_TIME_LIMIT, functionToBenchmark, data, TIME_BENCHMARK_COUNT_LIMIT);
 
             bootstrapResults = calculate_bootstrap_stats();
-
+/*
             std::cout << "CI wanted diff = " << precisionModePrecisionLimit / 100.0 << ", "
                         << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1 << ", "
                         << "mCILow = " << bootstrapResults.mCILow << ", "
                         << "mCIHigh = " << bootstrapResults.mCIHigh << std::endl;
+*/
+            double mCILowDiff = bootstrapResults.bootstrappedValuesAverage - bootstrapResults.mCILow;
+            double mCIHighDiff = bootstrapResults.mCIHigh - bootstrapResults.bootstrappedValuesAverage;
+            double CIWidthLimit = bootstrapResults.bootstrappedValuesAverage * precisionModePrecisionLimit / 100;
 
-            double diff_5 = bootstrapResults.bootstrappedValuesAverage - bootstrapResults.mCILow;
-            double diff_95 = bootstrapResults.mCIHigh - bootstrapResults.bootstrappedValuesAverage;
-            double CI_limit = bootstrapResults.bootstrappedValuesAverage * precisionModePrecisionLimit / 100;
-
-            if (diff_5 > CI_limit || diff_95 > CI_limit)
+            if (mCILowDiff > CIWidthLimit || mCIHighDiff > CIWidthLimit)
             {
                 int i = 0;
                 for (; i < PRECISION_ADDITIONL_STEPS_COUNT; i++)
@@ -196,12 +196,12 @@ namespace Benchmarking
                     // std::cout << "Not enough precision, running one more benchmark..." << std::endl;
                     run_benchmark_for_time(PRECISION_STEP_ADDITIONAL_TIME_LIMIT, functionToBenchmark, data, PRECISION_STEP_ADDITIONAL_BENCHMARK_LIMIT);
                     bootstrapResults = calculate_bootstrap_stats();
-
+/*
                     std::cout << "CI width = " << bootstrapResults.mCIHigh / bootstrapResults.mCILow - 1 << ", "
                               << "mCILow = " << bootstrapResults.mCILow << ", "
                               << "mCIHigh = " << bootstrapResults.mCIHigh << std::endl;
-
-                    if (diff_5 > CI_limit || diff_95 > CI_limit)
+*/
+                    if (mCILowDiff > CIWidthLimit || mCIHighDiff > CIWidthLimit)
                     {
                         // good enough precision
                         break;
