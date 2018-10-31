@@ -80,10 +80,10 @@ private:
     {
         if (node->isLeaf)
         {
-            uint16_t reversed = (path & 0xF000 >> 8) |
-                                (path & 0x0F00 >> 4) |
-                                (path & 0x00F0 << 4) |
-                                (path & 0x000F << 8);
+            uint16_t reversed = ((path & 0xF000) >> 12) |
+                                ((path & 0x0F00) >> 4) |
+                                ((path & 0x00F0) << 4) |
+                                ((path & 0x000F) << 12);
             result.insert(reversed);
         }
         else
@@ -319,7 +319,7 @@ int main(int argc, char** argv)
 
     // prepare random numbers for benchmarking
     std::mt19937 rng;
-    rng.seed(std::random_device()());
+    rng.seed(0);
     std::uniform_int_distribution<std::mt19937::result_type> dist(0, 65535);
 
     const int randomNumbersCnt = 2000;
