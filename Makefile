@@ -19,3 +19,6 @@ hw2: hw02/main.cpp
 
 hw3: hw03/main.cpp
 	$(CXX) $(CXXFLAGS) -o hw3 hw03/main.cpp
+
+c1: c01/main.cpp
+	$(CXX) $(CXXFLAGS) -o c1 c01/main.cpp
