@@ -1,12 +1,14 @@
 #include <iostream>
 #include <cstdlib>
+#include <cmath>
 #include <cstring>
+#include <bitset>
 
 using namespace std;
 
 constexpr int MAX = 15500000;
-int nums[MAX + 5];
-
+std::bitset<MAX + 5> nums;
+//int nums[MAX + 5];
 int main(int argc, char** argv)
 {
     if (argc != 2) return 0;
@@ -48,6 +50,37 @@ int main(int argc, char** argv)
             break;
        }
    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     return 0;
 }
