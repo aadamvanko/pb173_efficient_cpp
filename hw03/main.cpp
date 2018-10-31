@@ -11,9 +11,9 @@ using std::uint16_t;
 using std::cout;
 using std::endl;
 
-constexpr unsigned MAX_SIZE = 32;
+constexpr unsigned MAX_SIZE = 65535;
 
-class set_bitvector
+class set_bit_vector
 {
 private:
     std::bitset<MAX_SIZE> data;
@@ -29,9 +29,9 @@ public:
         data[value] = false;
     }
 
-    set_bitvector makeUnion(const set_bitvector& other)
+    set_bit_vector makeUnion(const set_bit_vector& other)
     {
-        set_bitvector result;
+        set_bit_vector result;
         for (size_t i = 0; i < data.size(); i++)
         {
             result.data[i] = data[i] || other.data[i];
@@ -39,9 +39,9 @@ public:
         return result;
     }
 
-    set_bitvector makeIntersection(const set_bitvector& other)
+    set_bit_vector makeIntersection(const set_bit_vector& other)
     {
-        set_bitvector result;
+        set_bit_vector result;
         for (size_t i = 0; i < data.size(); i++)
         {
             result.data[i] = data[i] && other.data[i];
@@ -64,16 +64,88 @@ public:
     }
 };
 
-void set_bitvector_unit_tests(bool debug=false)
+class set_nibble_trie
 {
-    set_bitvector sbv1;
+private:
+    static constexpr int MAX_CHILDREN = 16;
+    static constexpr int MAX_LEVEL = 4;
+
+    struct Node
+    {
+        Node* children[MAX_CHILDREN] = { 0 };
+        bool isLeaf = false;
+    } root;
+
+    void addRecursive(const Node* node, set_nibble_trie& result, uint16_t path)
+    {
+        if (node->isLeaf)
+        {
+            uint16_t reversed = (path & 0xF000 >> 8) |
+                                (path & 0x0F00 >> 4) |
+                                (path & 0x00F0 << 4) |
+                                (path & 0x000F << 8);
+            result.insert(reversed);
+        }
+        else
+        {
+            for (uint16_t i = 0; i < MAX_CHILDREN; i++)
+            {
+                if (node->children[i] != nullptr)
+                {
+                    addRecursive(node->children[i], result, (path << 4) + i);
+                }
+            }
+        }
+    }
+
+public:
+    void insert(uint16_t value)
+    {
+        Node* node = &root;
+        for (int level = 0; level < MAX_LEVEL; level++)
+        {
+            uint16_t byte = value & 0xF;
+            value >>= 4;
+            if (node->children[byte] == nullptr)
+            {
+                node->children[byte] = new Node();
+                node->children[byte]->isLeaf = (level == MAX_LEVEL - 1);
+            }
+            node = node->children[byte];
+        }
+    }
+
+    bool contains(uint16_t value)
+    {
+        const Node* node = &root;
+        while (node != nullptr && !node->isLeaf)
+        {
+            uint16_t byte = value & 0xF;
+            value >>= 4;
+            node = node->children[byte];
+        }
+        return node != nullptr;
+    }
+
+    set_nibble_trie makeUnion(const set_nibble_trie& other)
+    {
+        set_nibble_trie result;
+        addRecursive(&root, result, 0);
+        addRecursive(&other.root, result, 0);
+        return result;
+    }
+};
+
+void set_bit_vector_unit_tests(bool debug=false)
+{
+    set_bit_vector sbv1;
     sbv1.insert(0);
     sbv1.insert(2);
     assert(sbv1[0]);
     assert(sbv1[2]);
     if (debug) sbv1.print(cout);
 
-    set_bitvector sbv2;
+    set_bit_vector sbv2;
     sbv2.insert(0);
     sbv2.insert(1);
     assert(sbv2[0]);
@@ -91,9 +163,183 @@ void set_bitvector_unit_tests(bool debug=false)
     if (debug) intersectionRes.print(cout);
 }
 
-int main()
+void set_nibble_trie_unit_tests(bool debug=false)
 {
-    set_bitvector_unit_tests();
+    set_nibble_trie snt1;
+    snt1.insert(0);
+    snt1.insert(2);
+    assert(snt1.contains(0));
+    assert(snt1.contains(2));
+    //if (debug) snt1.print(cout);
+
+    set_nibble_trie snt2;
+    snt2.insert(0);
+    snt2.insert(1);
+    assert(snt2.contains(0));
+    assert(snt2.contains(1));
+    //if (debug) snt2.print(cout);
+
+    auto unionRes = snt1.makeUnion(snt2);
+    assert(unionRes.contains(0));
+    assert(unionRes.contains(1));
+    assert(unionRes.contains(2));
+    //if (debug) unionRes.print(cout);
+}
+
+void union_unit_tests()
+{
+    std::mt19937 rng;
+    rng.seed(0);
+    std::uniform_int_distribution<std::mt19937::result_type> dist(0, 65535);
+
+    const int randomNumbersCnt = 1000;
+    std::vector<uint16_t> randomNumbersA(randomNumbersCnt);
+    std::vector<uint16_t> randomNumbersB(randomNumbersCnt);
+    for (int i = 0; i < randomNumbersCnt; i++)
+    {
+        randomNumbersA[i] = dist(rng);
+        randomNumbersB[i] = dist(rng);
+    }
+
+    set_bit_vector sbv1;
+    set_bit_vector sbv2;
+    set_nibble_trie snt1;
+    set_nibble_trie snt2;
+    for (const auto number : randomNumbersA)
+    {
+        sbv1.insert(number);
+        snt1.insert(number);
+    }
+    for (const auto number : randomNumbersB)
+    {
+        sbv2.insert(number);
+        snt2.insert(number);
+    }
+
+    auto bitVectorUnionRes = sbv1.makeUnion(sbv2);
+    auto bitNibbleTrieUnionRes = snt1.makeUnion(snt2);
+
+    for (uint16_t i = 0; i < 65535; i++)
+    {
+        assert(bitVectorUnionRes[i] == bitNibbleTrieUnionRes.contains(i));
+    }
+}
+
+struct benchmark_data_inserts
+{
+    std::vector<uint16_t> numbers;
+};
+
+struct benchmark_data_union
+{
+    std::vector<uint16_t> numbersA;
+    std::vector<uint16_t> numbersB;
+};
+
+void benchmark_set_bit_vector_inserts(void* data)
+{
+    const std::vector<uint16_t> numbers = ((benchmark_data_inserts*)data)->numbers;
+    Benchmarking::size_info("numbers_count=" + std::to_string(numbers.size()));
+    set_bit_vector sbv;
+    Benchmarking::start();
+    for (const auto number : numbers)
+    {
+        sbv.insert(number);
+    }
+    Benchmarking::stop();
+    volatile bool c = sbv[0];
+}
+
+void benchmark_set_nibble_trie_inserts(void* data)
+{
+    const std::vector<uint16_t> numbers = ((benchmark_data_inserts*)data)->numbers;
+    Benchmarking::size_info("numbers_count=" + std::to_string(numbers.size()));
+    set_nibble_trie snt;
+    Benchmarking::start();
+    for (const auto number : numbers)
+    {
+        snt.insert(number);
+    }
+    Benchmarking::stop();
+    volatile bool c = snt.contains(0);
+}
+
+void benchmark_set_bit_vector_union(void* data)
+{
+    const std::vector<uint16_t> numbersA = ((benchmark_data_union*)data)->numbersA;
+    const std::vector<uint16_t> numbersB = ((benchmark_data_union*)data)->numbersB;
+    Benchmarking::size_info("numbers_count=" + std::to_string(numbersA.size()));
+    set_bit_vector sbvA;
+    set_bit_vector sbvB;
+    for (const auto number : numbersA) sbvA.insert(number);
+    for (const auto number : numbersB) sbvB.insert(number);
+    Benchmarking::start();
+    auto unionRes = sbvA.makeUnion(sbvB);
+    Benchmarking::stop();
+    volatile bool c = unionRes[0];
+}
+
+void benchmark_set_nibble_trie_union(void* data)
+{
+    const std::vector<uint16_t> numbersA = ((benchmark_data_union*)data)->numbersA;
+    const std::vector<uint16_t> numbersB = ((benchmark_data_union*)data)->numbersB;
+    Benchmarking::size_info("numbers_count=" + std::to_string(numbersA.size()));
+    set_nibble_trie sntA;
+    set_nibble_trie sntB;
+    for (const auto number : numbersA) sntA.insert(number);
+    for (const auto number : numbersB) sntB.insert(number);
+    Benchmarking::start();
+    auto unionRes = sntA.makeUnion(sntB);
+    Benchmarking::stop();
+    volatile bool c = unionRes.contains(0);
+}
+
+void benchmark_set_bit_vector_intersection(void* data)
+{
+    const std::vector<uint16_t> numbersA = ((benchmark_data_union*)data)->numbersA;
+    const std::vector<uint16_t> numbersB = ((benchmark_data_union*)data)->numbersB;
+    Benchmarking::size_info("numbers_count=" + std::to_string(numbersA.size()));
+    set_bit_vector sbvA;
+    set_bit_vector sbvB;
+    for (const auto number : numbersA) sbvA.insert(number);
+    for (const auto number : numbersB) sbvB.insert(number);
+    Benchmarking::start();
+    auto intersectionRes = sbvA.makeIntersection(sbvB);
+    Benchmarking::stop();
+    volatile bool c = intersectionRes[0];
+}
+
+int main(int argc, char** argv)
+{
+    Benchmarking::init(argc, argv);
+
+    set_bit_vector_unit_tests();
+    set_nibble_trie_unit_tests();
+    union_unit_tests();
+
+    // prepare random numbers for benchmarking
+    std::mt19937 rng;
+    rng.seed(std::random_device()());
+    std::uniform_int_distribution<std::mt19937::result_type> dist(0, 65535);
+
+    const int randomNumbersCnt = 2000;
+    std::vector<uint16_t> randomNumbersA(randomNumbersCnt);
+    std::vector<uint16_t> randomNumbersB(randomNumbersCnt);
+    for (int i = 0; i < randomNumbersCnt; i++)
+    {
+        randomNumbersA[i] = dist(rng);
+        randomNumbersB[i] = dist(rng);
+    }
+
+    benchmark_data_inserts benchmarkDataInserts{ randomNumbersA };
+    BENCHMARKING_RUN(benchmark_set_bit_vector_inserts, &benchmarkDataInserts);
+    BENCHMARKING_RUN(benchmark_set_nibble_trie_inserts, &benchmarkDataInserts);
+
+    benchmark_data_union benchmarkDataUnion{ randomNumbersA, randomNumbersB };
+    BENCHMARKING_RUN(benchmark_set_bit_vector_union, &benchmarkDataUnion);
+    BENCHMARKING_RUN(benchmark_set_nibble_trie_union, &benchmarkDataUnion);
+
+    BENCHMARKING_RUN(benchmark_set_bit_vector_intersection, &benchmarkDataUnion);
 
     return 0;
 }
