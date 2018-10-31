@@ -11,7 +11,7 @@ using std::uint16_t;
 using std::cout;
 using std::endl;
 
-constexpr unsigned MAX_SIZE = 65535;
+constexpr unsigned MAX_SIZE = 65536;
 
 class set_bit_vector
 {
@@ -141,6 +141,7 @@ void set_bit_vector_unit_tests(bool debug=false)
     set_bit_vector sbv1;
     sbv1.insert(0);
     sbv1.insert(2);
+    sbv1.insert(65535);
     assert(sbv1[0]);
     assert(sbv1[2]);
     if (debug) sbv1.print(cout);
@@ -156,6 +157,7 @@ void set_bit_vector_unit_tests(bool debug=false)
     assert(unionRes[0]);
     assert(unionRes[1]);
     assert(unionRes[2]);
+    assert(unionRes[65535]);
     if (debug) unionRes.print(cout);
 
     auto intersectionRes = sbv1.makeIntersection(sbv2);
@@ -168,8 +170,10 @@ void set_nibble_trie_unit_tests(bool debug=false)
     set_nibble_trie snt1;
     snt1.insert(0);
     snt1.insert(2);
+    snt1.insert(65535);
     assert(snt1.contains(0));
     assert(snt1.contains(2));
+    assert(snt1.contains(65535));
     //if (debug) snt1.print(cout);
 
     set_nibble_trie snt2;
@@ -183,6 +187,7 @@ void set_nibble_trie_unit_tests(bool debug=false)
     assert(unionRes.contains(0));
     assert(unionRes.contains(1));
     assert(unionRes.contains(2));
+    assert(unionRes.contains(65535));
     //if (debug) unionRes.print(cout);
 }
 
@@ -319,7 +324,9 @@ int main(int argc, char** argv)
 
     // prepare random numbers for benchmarking
     std::mt19937 rng;
-    rng.seed(0);
+    auto seedValue = std::random_device()();
+    rng.seed(seedValue);
+    cout << "seedValue=" << seedValue << endl;
     std::uniform_int_distribution<std::mt19937::result_type> dist(0, 65535);
 
     const int randomNumbersCnt = 2000;
@@ -332,11 +339,11 @@ int main(int argc, char** argv)
     }
 
     benchmark_data_inserts benchmarkDataInserts{ randomNumbersA };
-    BENCHMARKING_RUN(benchmark_set_bit_vector_inserts, &benchmarkDataInserts);
-    BENCHMARKING_RUN(benchmark_set_nibble_trie_inserts, &benchmarkDataInserts);
+    //BENCHMARKING_RUN(benchmark_set_bit_vector_inserts, &benchmarkDataInserts);
+    //BENCHMARKING_RUN(benchmark_set_nibble_trie_inserts, &benchmarkDataInserts);
 
     benchmark_data_union benchmarkDataUnion{ randomNumbersA, randomNumbersB };
-    BENCHMARKING_RUN(benchmark_set_bit_vector_union, &benchmarkDataUnion);
+    //BENCHMARKING_RUN(benchmark_set_bit_vector_union, &benchmarkDataUnion);
     BENCHMARKING_RUN(benchmark_set_nibble_trie_union, &benchmarkDataUnion);
 
     BENCHMARKING_RUN(benchmark_set_bit_vector_intersection, &benchmarkDataUnion);
