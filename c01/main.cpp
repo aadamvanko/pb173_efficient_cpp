@@ -4,7 +4,7 @@
 
 using namespace std;
 
-constexpr int MAX = 7370000;
+constexpr int MAX = 15500000;
 int nums[MAX + 5];
 
 int main(int argc, char** argv)
