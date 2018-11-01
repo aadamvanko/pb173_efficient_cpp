@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include <string>
+#include <memory>
 
 #include "../hw01/benchmark_tool.hpp"
 
@@ -72,7 +73,7 @@ private:
 
     struct Node
     {
-        Node* children[MAX_CHILDREN] = { 0 };
+        std::unique_ptr<Node> children[MAX_CHILDREN];
         bool isLeaf = false;
     } root;
 
@@ -92,7 +93,7 @@ private:
             {
                 if (node->children[i] != nullptr)
                 {
-                    addRecursive(node->children[i], result, (path << 4) + i);
+                    addRecursive(node->children[i].get(), result, (path << 4) + i);
                 }
             }
         }
@@ -108,10 +109,10 @@ public:
             value >>= 4;
             if (node->children[byte] == nullptr)
             {
-                node->children[byte] = new Node();
+                node->children[byte] = std::make_unique<Node>();
                 node->children[byte]->isLeaf = (level == MAX_LEVEL - 1);
             }
-            node = node->children[byte];
+            node = node->children[byte].get();
         }
     }
 
@@ -122,7 +123,7 @@ public:
         {
             uint16_t byte = value & 0xF;
             value >>= 4;
-            node = node->children[byte];
+            node = node->children[byte].get();
         }
         return node != nullptr;
     }
@@ -339,11 +340,11 @@ int main(int argc, char** argv)
     }
 
     benchmark_data_inserts benchmarkDataInserts{ randomNumbersA };
-    //BENCHMARKING_RUN(benchmark_set_bit_vector_inserts, &benchmarkDataInserts);
-    //BENCHMARKING_RUN(benchmark_set_nibble_trie_inserts, &benchmarkDataInserts);
+    BENCHMARKING_RUN(benchmark_set_bit_vector_inserts, &benchmarkDataInserts);
+    BENCHMARKING_RUN(benchmark_set_nibble_trie_inserts, &benchmarkDataInserts);
 
     benchmark_data_union benchmarkDataUnion{ randomNumbersA, randomNumbersB };
-    //BENCHMARKING_RUN(benchmark_set_bit_vector_union, &benchmarkDataUnion);
+    BENCHMARKING_RUN(benchmark_set_bit_vector_union, &benchmarkDataUnion);
     BENCHMARKING_RUN(benchmark_set_nibble_trie_union, &benchmarkDataUnion);
 
     BENCHMARKING_RUN(benchmark_set_bit_vector_intersection, &benchmarkDataUnion);
