@@ -327,7 +327,7 @@ int main(int argc, char** argv)
     std::mt19937 rng;
     auto seedValue = std::random_device()();
     rng.seed(seedValue);
-    cout << "seedValue=" << seedValue << endl;
+    //cout << "seedValue=" << seedValue << endl;
     std::uniform_int_distribution<std::mt19937::result_type> dist(0, 65535);
 
     const int randomNumbersCnt = 2000;
