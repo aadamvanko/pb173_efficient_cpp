@@ -4,58 +4,10 @@
 #include <random>
 #include <cassert>
 
-struct Random
-{
-    using State = int;
-    using Label = int;
-
-    std::vector< std::vector< int > > _succs;
-
-    Random( int vertices, int edges, unsigned seed = 0 )
-    {
-        std::mt19937 rand{ seed };
-        std::uniform_int_distribution< int > dist( 1, vertices );
-        _succs.resize( vertices + 1 );
-        std::set< int > connected;
-        int last = 1;
-
-        /* first connect everything */
-        while ( int( connected.size() ) < vertices ) {
-            int next = dist( rand );
-            if ( connected.count( next ) )
-                continue;
-            _succs[ last ].push_back( next );
-            connected.insert( next );
-            last = next;
-            -- edges;
-        }
-
-        /* add more edges at random */
-        while ( edges > 0 ) {
-        next:
-            int from = dist( rand );
-            int to = dist( rand );
-            for ( auto c : _succs[ from ] )
-                if ( to == c )
-                    goto next;
-            _succs[ from ].push_back( to );
-            -- edges;
-        }
-    }
-
-    template< typename Y >
-    void edges( int from, Y yield )
-    {
-        for ( auto t : _succs[ from ] )
-            yield( t );
-    }
-
-    template< typename Y >
-    void initials( Y yield )
-    {
-        yield( 1 );
-    }
-};
+#include "bfs.hpp"
+#include "bfs_std_function.hpp"
+#include "bfs_visitor.hpp"
+#include "../../hw01/benchmark_tool.hpp"
 
 template< typename G >
 std::pair< int, int > bfs( G &graph )
@@ -83,12 +35,100 @@ std::pair< int, int > bfs( G &graph )
     return std::make_pair( vertices, edges );
 }
 
-int main()
+class MyEdgeVisitor : public EdgeVisitor
 {
-    int vertices = 5000, edges = 80000;
-    Random r( vertices, edges );
+private:
+    std::list< int >& m_open;
+
+public:
+    MyEdgeVisitor(std::list< int >& open) : m_open(open)
+    {
+    }
+
+    void visit(int edge) override
+    {
+        m_open.push_back(edge);
+    }
+};
+
+template< typename G >
+std::pair< int, int > bfsVisitor( G &graph )
+{
+    std::list< int > open;
+    std::set< int > closed;
+    MyEdgeVisitor myEdgeVisitor(open);
+
+    graph.initials( [&]( auto v ) { open.push_back( v ); } );
+    int edges = -1, vertices = 0;
+
+    while ( !open.empty() )
+    {
+        auto v = open.front();
+        open.pop_front();
+
+        ++ edges;
+        if ( closed.count( v ) )
+            continue;
+
+        closed.insert( v );
+        ++ vertices;
+        graph.edges( v, myEdgeVisitor);
+    }
+
+    return std::make_pair( vertices, edges );
+}
+
+struct benchmark_data
+{
+    int vertices;
+    int edges;
+};
+
+void benchmark_template(void* data)
+{
+    const benchmark_data& benchmarkData = *(benchmark_data*)data;
+    Random r( benchmarkData.vertices, benchmarkData.edges );
+    Benchmarking::size_info("vertices=" + std::to_string(benchmarkData.vertices) + ", edges=" + std::to_string(benchmarkData.edges));
+    Benchmarking::start();
     auto b = bfs( r );
-    assert( b.first == vertices );
-    assert( b.second == edges );
+    Benchmarking::stop();
+    assert( b.first == benchmarkData.vertices );
+    assert( b.second == benchmarkData.edges );
+}
+
+void benchmark_std_function(void* data)
+{
+    const benchmark_data& benchmarkData = *(benchmark_data*)data;
+    RandomStdFunction rRandom( benchmarkData.vertices, benchmarkData.edges );
+    Benchmarking::size_info("vertices=" + std::to_string(benchmarkData.vertices) + ", edges=" + std::to_string(benchmarkData.edges));
+    Benchmarking::start();
+    auto b = bfs( rRandom );
+    Benchmarking::stop();
+    assert( b.first == benchmarkData.vertices );
+    assert( b.second == benchmarkData.edges );
+}
+
+void benchmark_visitor(void* data)
+{
+    const benchmark_data& benchmarkData = *(benchmark_data*)data;
+    RandomVisitor rVisitor( benchmarkData.vertices, benchmarkData.edges );
+    Benchmarking::size_info("vertices=" + std::to_string(benchmarkData.vertices) + ", edges=" + std::to_string(benchmarkData.edges));
+    Benchmarking::start();
+    auto b = bfsVisitor( rVisitor );
+    Benchmarking::stop();
+    assert( b.first == benchmarkData.vertices );
+    assert( b.second == benchmarkData.edges );
+}
+
+
+int main(int argc, char** argv)
+{
+    Benchmarking::init(argc, argv);
+
+    benchmark_data benchmarkData{ 10000, 200000 };
+    BENCHMARKING_RUN(benchmark_template, &benchmarkData);
+    BENCHMARKING_RUN(benchmark_std_function, &benchmarkData);
+    BENCHMARKING_RUN(benchmark_visitor, &benchmarkData);
+
     return 0;
 }
