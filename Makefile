@@ -8,8 +8,11 @@ ex1: ex01/ex01.cpp
 ex3: ex03/main.cpp
 	$(CXX) $(CXXFLAGS) -o ex3 ex03/main.cpp
 
-ex5: ex05/main.cpp
-	$(CXX) $(CXXFLAGS) -o ex5 ex05/foreach.cpp ex05/main.cpp
+ex5_1:
+	$(CXX) $(CXXFLAGS) -o ex5 ex05/variant1/bfs_std_function.cpp ex05/variant1/bfs_visitor.cpp ex05/variant1/main.cpp
+
+ex5_2:
+	$(CXX) $(CXXFLAGS) -o ex5 ex05/variant2/foreach.cpp ex05/variant2/main.cpp
 
 hw1: hw01/main.cpp
 	$(CXX) $(CXXFLAGS) -o hw1 hw01/main.cpp
