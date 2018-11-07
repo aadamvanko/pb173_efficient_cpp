@@ -164,6 +164,20 @@ void set_bit_vector_unit_tests(bool debug=false)
     auto intersectionRes = sbv1.makeIntersection(sbv2);
     assert(intersectionRes[0]);
     if (debug) intersectionRes.print(cout);
+
+    set_bit_vector sbv3;
+    sbv3.insert(0);
+    sbv3.insert(1);
+    sbv3.insert(65535);
+    assert(sbv3[0]);
+    assert(sbv3[1]);
+    assert(sbv3[65535]);
+    sbv3.erase(0);
+    sbv3.erase(1);
+    sbv3.erase(65535);
+    assert(!sbv3[0]);
+    assert(!sbv3[1]);
+    assert(!sbv3[65535]);
 }
 
 void set_nibble_trie_unit_tests(bool debug=false)
@@ -330,24 +344,27 @@ int main(int argc, char** argv)
     //cout << "seedValue=" << seedValue << endl;
     std::uniform_int_distribution<std::mt19937::result_type> dist(0, 65535);
 
-    const int randomNumbersCnt = 2000;
-    std::vector<uint16_t> randomNumbersA(randomNumbersCnt);
-    std::vector<uint16_t> randomNumbersB(randomNumbersCnt);
-    for (int i = 0; i < randomNumbersCnt; i++)
-    {
-        randomNumbersA[i] = dist(rng);
-        randomNumbersB[i] = dist(rng);
+    for (int randomNumbersCount = 2; randomNumbersCount <= 2048; randomNumbersCount *= 4) {
+        std::vector<uint16_t> randomNumbersA(randomNumbersCount);
+        std::vector<uint16_t> randomNumbersB(randomNumbersCount);
+        for (int i = 0; i < randomNumbersCount; i++)
+        {
+            randomNumbersA[i] = dist(rng);
+            randomNumbersB[i] = dist(rng);
+        }
+
+        benchmark_data_inserts benchmarkDataInserts{ randomNumbersA };
+        BENCHMARKING_RUN(benchmark_set_bit_vector_inserts, &benchmarkDataInserts);
+        BENCHMARKING_RUN(benchmark_set_nibble_trie_inserts, &benchmarkDataInserts);
+
+        benchmark_data_union benchmarkDataUnion{ randomNumbersA, randomNumbersB };
+        BENCHMARKING_RUN(benchmark_set_bit_vector_union, &benchmarkDataUnion);
+        BENCHMARKING_RUN(benchmark_set_nibble_trie_union, &benchmarkDataUnion);
+
+        // BENCHMARKING_RUN(benchmark_set_bit_vector_intersection, &benchmarkDataUnion);
     }
 
-    benchmark_data_inserts benchmarkDataInserts{ randomNumbersA };
-    BENCHMARKING_RUN(benchmark_set_bit_vector_inserts, &benchmarkDataInserts);
-    BENCHMARKING_RUN(benchmark_set_nibble_trie_inserts, &benchmarkDataInserts);
 
-    benchmark_data_union benchmarkDataUnion{ randomNumbersA, randomNumbersB };
-    BENCHMARKING_RUN(benchmark_set_bit_vector_union, &benchmarkDataUnion);
-    BENCHMARKING_RUN(benchmark_set_nibble_trie_union, &benchmarkDataUnion);
-
-    BENCHMARKING_RUN(benchmark_set_bit_vector_intersection, &benchmarkDataUnion);
 
     return 0;
 }
