@@ -14,6 +14,9 @@ ex5_1:
 ex5_2:
 	$(CXX) $(CXXFLAGS) -o ex5 ex05/variant2/foreach.cpp ex05/variant2/main.cpp
 
+ex7:
+	$(CXX) $(CXXFLAGS) -o ex7 ex07/main.cpp
+
 hw1: hw01/main.cpp
 	$(CXX) $(CXXFLAGS) -o hw1 hw01/main.cpp
 	

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <cstdint>
 #include <fstream>
 #include <streambuf>
@@ -91,9 +92,9 @@ public:
 };
 }
 
-int main()
+int main(int argc, char** argv)
 {
-    const string filename = "mandelbrot.b";
+    const string filename("ex07/mandelbrot.b");
     ifstream file(filename);
     if (!file)
     {
@@ -106,6 +107,5 @@ int main()
 
     Brainfuck::BrainfuckInterpreter interpreter;
     interpreter.execute(program);
-    //interpreter.execute("+[-[<<[+[--->]-[<<<]]]>>>-]>-.---.>..>.<<<<-.<+.>>>>>.>.<<.<-.");
     return 0;
 }
