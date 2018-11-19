@@ -4,12 +4,13 @@
 #include <random>
 #include <cassert>
 
+#include "../hw01/benchmark_tool.hpp"
+
 using std::string;
 using std::cout;
 using std::endl;
 using std::vector;
-
-// #include "../hw01/benchmark_tool.hpp"
+using std::to_string;
 
 bool containsSubstringCheck(const string&a, const string& b)
 {
@@ -18,6 +19,11 @@ bool containsSubstringCheck(const string&a, const string& b)
 
 bool containsSubstringNaive(const string& a, const string& b)
 {
+    if (a.length() < b.length())
+    {
+        return false;
+    }
+
     for (auto itA = a.cbegin(); itA != a.cend() - b.size(); itA++)
     {
         bool ok = true;
@@ -39,6 +45,11 @@ bool containsSubstringNaive(const string& a, const string& b)
 
 bool containsSubstringKMP(const string& a, const string& b)
 {
+    if (a.length() < b.length())
+    {
+        return false;
+    }
+
     if (b.empty())
         return false;
 
@@ -67,6 +78,11 @@ bool containsSubstringKMP(const string& a, const string& b)
 uint16_t states[65536][26] = { 0 };
 bool containsSubstringDFA(const string& a, const string& b)
 {
+    if (a.length() < b.length())
+    {
+        return false;
+    }
+
     // posledné dve políčka budú mať v prípade, že b.size() = 65536 veľmi veľké hodnoty pretože dôjde k pretečeniu
     for (uint16_t i = 0; i < b.size(); i++)
     {
@@ -122,14 +138,58 @@ void unitTests()
     }
 }
 
-int main()
+struct benchmarkData
 {
+    string a;
+    string b;
+};
+
+void benchmark_naive(void* data)
+{
+    const benchmarkData& d = *(benchmarkData*)data;
+    Benchmarking::size_info("string_length=" + to_string(d.a.length()) + ", substring_length=" + to_string(d.b.length()));
+    Benchmarking::start();
+    auto res = containsSubstringNaive(d.a, d.b);
+    Benchmarking::stop();
+    res ^= res;
+}
+
+void benchmark_KMP(void* data)
+{
+    const benchmarkData& d = *(benchmarkData*)data;
+    Benchmarking::size_info("string_length=" + to_string(d.a.length()) + ", substring_length=" + to_string(d.b.length()));
+    Benchmarking::start();
+    auto res = containsSubstringKMP(d.a, d.b);
+    Benchmarking::stop();
+    res ^= res;
+}
+
+void benchmark_DFA(void* data)
+{
+    const benchmarkData& d = *(benchmarkData*)data;
+    Benchmarking::size_info("string_length=" + to_string(d.a.length()) + ", substring_length=" + to_string(d.b.length()));
+    Benchmarking::start();
+    auto res = containsSubstringDFA(d.a, d.b);
+    Benchmarking::stop();
+    res ^= res;
+}
+
+int main(int argc, char** argv)
+{
+    Benchmarking::init(argc, argv);
     unitTests();
 
     const vector<char> chars{ 'a', 'b' };
     for (int lengthA = 2; lengthA <= 65536; lengthA *= 2) {
-        string strA = generateString(lengthA, chars);
-        string strB = generateString(lengthA / 2, chars);
+        benchmarkData data;
+        data.a = generateString(lengthA, chars);
+        data.b = generateString(lengthA / 2, chars);
+        cout << data.a << endl;
+        cout << data.b << endl;
+
+        BENCHMARKING_RUN(benchmark_naive, &data);
+        BENCHMARKING_RUN(benchmark_KMP, &data);
+        BENCHMARKING_RUN(benchmark_DFA, &data);
     }
     return 0;
 }
