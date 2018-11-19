@@ -32,6 +32,7 @@ temp
 *.exe
 *.out
 *.app
+c1
 hw1
 hw2
 hw3
@@ -40,5 +41,6 @@ hw5
 ex1
 ex3
 ex5
+ex7
 build-*
 *.user
