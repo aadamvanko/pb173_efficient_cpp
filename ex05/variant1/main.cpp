@@ -125,7 +125,7 @@ int main(int argc, char** argv)
 {
     Benchmarking::init(argc, argv);
 
-    benchmark_data benchmarkData{ 10000, 200000 };
+    benchmark_data benchmarkData{ 10000, 500000 };
     BENCHMARKING_RUN(benchmark_template, &benchmarkData);
     BENCHMARKING_RUN(benchmark_std_function, &benchmarkData);
     BENCHMARKING_RUN(benchmark_visitor, &benchmarkData);
