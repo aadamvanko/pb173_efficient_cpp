@@ -33,20 +33,14 @@ public:
     set_bit_vector makeUnion(const set_bit_vector& other)
     {
         set_bit_vector result;
-        for (size_t i = 0; i < data.size(); i++)
-        {
-            result.data[i] = data[i] || other.data[i];
-        }
+        result.data = data | other.data;
         return result;
     }
 
     set_bit_vector makeIntersection(const set_bit_vector& other)
     {
         set_bit_vector result;
-        for (size_t i = 0; i < data.size(); i++)
-        {
-            result.data[i] = data[i] && other.data[i];
-        }
+        result.data = data & other.data;
         return result;
     }
 
