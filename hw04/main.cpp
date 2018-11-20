@@ -44,7 +44,38 @@ bool containsSubstringNaive(const string& a, const string& b)
     return false;
 }
 
-uint16_t kmpTable[65536];
+int f[65536];
+int kmp(const char* t, const char* p) {
+  int m = strlen(p);
+  int n = strlen(t);
+
+  memset(f, 0, sizeof(int) * m);
+  int i = 0;
+  int j = 0;
+
+  while (i < n) {
+    if (t[i] == p[j]) {
+      if (j == m - 1) {
+        return true;
+      }
+      else {
+        i += 1;
+        j += 1;
+      }
+    }
+    else {
+      if (j > 0) {
+        j = f[j-1];
+      }
+      else {
+        i += 1;
+      }
+    }
+  }
+
+  return false;
+}
+
 bool containsSubstringKMP(const string& a, const string& b)
 {
     if (a.length() < b.length())
@@ -52,29 +83,11 @@ bool containsSubstringKMP(const string& a, const string& b)
         return false;
     }
 
-    if (b.empty())
-        return false;
-
-    memset(kmpTable, 0, b.size() * sizeof(uint16_t));
-    for (size_t i = 1, k = 0; i < b.size(); ++i) {
-        while (k && b[k] != b[i])
-            k = kmpTable[k - 1];
-        if (b[k] == b[i])
-                ++k;
-        kmpTable[i] = k;
-    }
-
-    for (size_t i = 0, k = 0; i < a.size(); ++i) {
-        while (k && b[k] != a[i])
-            k = kmpTable[k - 1];
-        if (b[k] == a[i])
-            ++k;
-        if (k == b.size())
-            return true;
-    }
-
-    return false;
+    return kmp(a.c_str(), b.c_str());
 }
+
+constexpr int NUMBER_OF_CHARS = 26;
+uint16_t states[65536][NUMBER_OF_CHARS];
 
 bool containsSubstringDFA(const string& a, const string& b)
 {
@@ -83,19 +96,20 @@ bool containsSubstringDFA(const string& a, const string& b)
         return false;
     }
 
-    /*size_t state = 1;
-    for (const char c : a)
-    {
+    memset(states, 0, sizeof(uint16_t) * NUMBER_OF_CHARS * b.length());
+    // build transition table
+    for (size_t i = 0; i < b.length() - 1; i++) {
+        states[i][b[i + 1] - 'a'] = i + 1;
+    }
+
+    size_t state = 0;
+    for (const char c : a) {
         state = states[state][c - 'a'];
-        if (state == b.size() + 1)
-        {
+        if (state == b.length() - 1) {
             return true;
         }
-        else if (state == 0)
-        {
-            state = 1;
-        }
-    }*/
+    }
+
     return false;
 }
 
