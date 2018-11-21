@@ -88,7 +88,82 @@ bool containsSubstringKMP(const string& a, const string& b)
 }
 
 constexpr int NUMBER_OF_CHARS = 26;
-uint16_t states[65536][NUMBER_OF_CHARS];
+
+/**
+ * Space may be further minimized at the cost of running time
+ */
+unsigned DFA[NUMBER_OF_CHARS][65536];
+
+
+bool DFAStringMatching(const string& text, const string& pattern){
+    unsigned m = pattern.length();
+    unsigned n = text.length();
+
+    /**
+     * i is incrementing by 1, meaning using text[i] whole input string can be traversed.
+     * text[i] is a character. DFA[text[i]][j] means text[i] character column and j th row.
+     * This position or cell contains the column for next transition.
+     */
+    unsigned i, j;
+    for(i = 0, j = 0; i < n && j < m; ++i)
+        j = DFA[text[i] - 'a'][j];
+
+    /**
+     * If j equals m then all transition completed successfully
+     * meaning the string are a match.
+     */
+    return j == m;
+}
+
+void CreateDFA(const string& pattern){
+    unsigned m = pattern.length();
+
+    memset(DFA, 0, sizeof(DFA));
+    /**
+     * Set the first state to 1
+     */
+    DFA[pattern[0] - 'a'][0] = 1;
+
+    unsigned x, j, k;
+    for(x = 0, j = 1; j < m; ++j){
+        /**
+         * Copy all values from x column to j column.
+         */
+        for(k = 0; k < NUMBER_OF_CHARS; ++k)
+            DFA[k][j] = DFA[k][x];
+
+        /**
+         * Update position in table to the next transition.
+         */
+        DFA[pattern[j] - 'a'][j] = j + 1;
+
+        /**
+         * Update the column from which to copy values.
+         */
+        x = DFA[pattern[j] - 'a'][x];
+    }
+
+
+    /**
+     * Uncomment code below to see transitions to states in DFA table
+     * For printing transitions in DFA
+     * Delete this before submitting to UVA
+     * Empty or Zero in DFA means transition to initial state
+     */
+
+/*
+    int val = 0;
+    for(j = 0; j < m; ++j){
+        for(k = 0; k < r; ++k){
+            val = DFA[k][j];
+            if(val)
+                printf("Transition from state (%d) to state (%d) for input: %c\n", j, DFA[k][j], k);
+        }
+        printf("\n");
+    }
+*/
+
+}
 
 bool containsSubstringDFA(const string& a, const string& b)
 {
@@ -96,24 +171,9 @@ bool containsSubstringDFA(const string& a, const string& b)
     {
         return false;
     }
-/*
-    memset(states, 0, sizeof(uint16_t) * NUMBER_OF_CHARS * b.length());
-    // build transition table
-    for (size_t i = 0; i < b.length() - 1; i++) {
-        states[i][b[i + 1] - 'a'] = i + 1;
-    }
 
-    size_t state = 0;
-    for (const char c : a) {
-        state = states[state][c - 'a'];
-        if (state == b.length() - 1) {
-            return true;
-        }
-    }
-*/
-    std::regex regex_pattern(b);
-    std::smatch match;
-    return std::regex_search(a, match, regex_pattern);
+    CreateDFA(b);
+    return DFAStringMatching(a, b);
 }
 
 string generateString(int length, const vector<char>& chars)
