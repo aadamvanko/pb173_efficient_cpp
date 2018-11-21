@@ -149,9 +149,9 @@ void unitTests()
 
     for (const auto testCase : testStrings)
     {
-        cout << testCase.first << " " << testCase.second << endl;
+//        cout << testCase.first << " " << testCase.second << endl;
         bool correctResult = containsSubstringCheck(testCase.first, testCase.second);
-        cout << "correctResult=" << correctResult << endl;
+//        cout << "correctResult=" << correctResult << endl;
         assert(correctResult == containsSubstringNaive(testCase.first, testCase.second));
         assert(correctResult == containsSubstringKMP(testCase.first, testCase.second));
         assert(correctResult == containsSubstringDFA(testCase.first, testCase.second));
@@ -215,8 +215,8 @@ int main(int argc, char** argv)
         benchmarkData data;
         data.a = generateString(lengthA, chars);
         data.b = generateString(lengthA / 2, chars);
-        cout << data.a << endl;
-        cout << data.b << endl;
+//        cout << data.a << endl;
+//        cout << data.b << endl;
 
         BENCHMARKING_RUN(benchmark_naive, &data);
         BENCHMARKING_RUN(benchmark_KMP, &data);
