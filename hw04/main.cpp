@@ -92,7 +92,7 @@ constexpr int NUMBER_OF_CHARS = 26;
 /**
  * Space may be further minimized at the cost of running time
  */
-unsigned DFA[NUMBER_OF_CHARS][65536];
+unsigned DFA[65536][NUMBER_OF_CHARS];
 
 
 bool DFAStringMatching(const string& text, const string& pattern){
@@ -106,7 +106,7 @@ bool DFAStringMatching(const string& text, const string& pattern){
      */
     unsigned i, j;
     for(i = 0, j = 0; i < n && j < m; ++i)
-        j = DFA[text[i] - 'a'][j];
+        j = DFA[j][text[i] - 'a'];
 
     /**
      * If j equals m then all transition completed successfully
@@ -118,11 +118,11 @@ bool DFAStringMatching(const string& text, const string& pattern){
 void CreateDFA(const string& pattern){
     unsigned m = pattern.length();
 
-    memset(DFA, 0, sizeof(DFA));
+    memset(DFA, 0, sizeof(unsigned) * NUMBER_OF_CHARS * m);
     /**
      * Set the first state to 1
      */
-    DFA[pattern[0] - 'a'][0] = 1;
+    DFA[0][pattern[0] - 'a'] = 1;
 
     unsigned x, j, k;
     for(x = 0, j = 1; j < m; ++j){
@@ -130,39 +130,18 @@ void CreateDFA(const string& pattern){
          * Copy all values from x column to j column.
          */
         for(k = 0; k < NUMBER_OF_CHARS; ++k)
-            DFA[k][j] = DFA[k][x];
+            DFA[j][k] = DFA[x][k];
 
         /**
          * Update position in table to the next transition.
          */
-        DFA[pattern[j] - 'a'][j] = j + 1;
+        DFA[j][pattern[j] - 'a'] = j + 1;
 
         /**
          * Update the column from which to copy values.
          */
-        x = DFA[pattern[j] - 'a'][x];
+        x = DFA[x][pattern[j] - 'a'];
     }
-
-
-    /**
-     * Uncomment code below to see transitions to states in DFA table
-     * For printing transitions in DFA
-     * Delete this before submitting to UVA
-     * Empty or Zero in DFA means transition to initial state
-     */
-
-/*
-    int val = 0;
-    for(j = 0; j < m; ++j){
-        for(k = 0; k < r; ++k){
-            val = DFA[k][j];
-            if(val)
-                printf("Transition from state (%d) to state (%d) for input: %c\n", j, DFA[k][j], k);
-        }
-        printf("\n");
-    }
-*/
-
 }
 
 bool containsSubstringDFA(const string& a, const string& b)
