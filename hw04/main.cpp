@@ -4,6 +4,7 @@
 #include <random>
 #include <cassert>
 #include <utility>
+#include <regex>
 
 #include "../hw01/benchmark_tool.hpp"
 
@@ -95,7 +96,7 @@ bool containsSubstringDFA(const string& a, const string& b)
     {
         return false;
     }
-
+/*
     memset(states, 0, sizeof(uint16_t) * NUMBER_OF_CHARS * b.length());
     // build transition table
     for (size_t i = 0; i < b.length() - 1; i++) {
@@ -109,8 +110,10 @@ bool containsSubstringDFA(const string& a, const string& b)
             return true;
         }
     }
-
-    return false;
+*/
+    std::regex regex_pattern(b);
+    std::smatch match;
+    return std::regex_search(a, match, regex_pattern);
 }
 
 string generateString(int length, const vector<char>& chars)
@@ -151,7 +154,7 @@ void unitTests()
         cout << "correctResult=" << correctResult << endl;
         assert(correctResult == containsSubstringNaive(testCase.first, testCase.second));
         assert(correctResult == containsSubstringKMP(testCase.first, testCase.second));
-        //assert(correctResult == containsSubstringDFA(testCase.first, testCase.second));
+        assert(correctResult == containsSubstringDFA(testCase.first, testCase.second));
     }
 
     const vector<char> chars{ 'a', 'b' };
@@ -161,7 +164,7 @@ void unitTests()
         bool correctResult = containsSubstringCheck(strA, strB);
         assert(correctResult == containsSubstringNaive(strA, strB));
         assert(correctResult == containsSubstringKMP(strA, strB));
-        //assert(correctResult == containsSubstringDFA(strA, strB));
+        assert(correctResult == containsSubstringDFA(strA, strB));
     }
 }
 
@@ -217,7 +220,7 @@ int main(int argc, char** argv)
 
         BENCHMARKING_RUN(benchmark_naive, &data);
         BENCHMARKING_RUN(benchmark_KMP, &data);
-        //BENCHMARKING_RUN(benchmark_DFA, &data);
+        BENCHMARKING_RUN(benchmark_DFA, &data);
     }
     return 0;
 }
