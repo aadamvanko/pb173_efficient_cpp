@@ -46,31 +46,6 @@ bool containsSubstringNaive(const string& a, const string& b)
 }
 
 int f[65536];
-bool kmp2(const string &needle, const string &haystack) {
-  int m = needle.size();
-  memset(f, 0, sizeof(int) * (needle.length() + 1));
-  f[0] = -1;
-  for (int i = 0; i < m; ++i) {
-    f[i+1] = f[i];
-    while (f[i+1] > -1 && needle[f[i+1]] != needle[i]) {
-      f[i+1] = f[f[i+1]];
-    }
-    f[i+1]++;
-  }
-
-  int n = haystack.size();
-  int seen = 0;
-  for (int i = 0; i < n; ++i){
-    while (seen > -1 and needle[seen] != haystack[i]) {
-      seen = f[seen];
-    }
-    if (++seen == m) {
-        return true;
-    }
-  }
-  return false;
-}
-
 int kmp(const char* t, const char* p) {
   int m = strlen(p);
   int n = strlen(t);
@@ -109,7 +84,7 @@ bool containsSubstringKMP(const string& a, const string& b)
         return false;
     }
 
-    return kmp2(b, a);
+    return kmp(a.c_str(), b.c_str());
 }
 
 constexpr int NUMBER_OF_CHARS = 26;
@@ -240,8 +215,8 @@ int main(int argc, char** argv)
         benchmarkData data;
         data.a = generateString(lengthA, chars);
         data.b = generateString(lengthA / 2, chars);
-        //cout << data.a << endl;
-        //cout << data.b << endl;
+        cout << data.a << endl;
+        cout << data.b << endl;
 
         BENCHMARKING_RUN(benchmark_naive, &data);
         BENCHMARKING_RUN(benchmark_KMP, &data);
