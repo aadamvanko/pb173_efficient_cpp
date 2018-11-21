@@ -31,3 +31,6 @@ hw4: hw04/main.cpp
 
 c1: c01/main.cpp
 	$(CXX) $(CXXFLAGS) -o c1 c01/main.cpp
+
+c2: c02/main.cpp
+	$(CXX) $(CXXFLAGS) -o c2 c02/main.cpp
