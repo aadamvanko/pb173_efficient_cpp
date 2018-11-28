@@ -57,6 +57,12 @@ int main()
         old_diff = diff;
         double mid = (lowInt + highInt) / 2;
         diff = calcDiff(mid, cnt);
+        if (lowDiff < highDiff) {
+
+        }
+        else {
+
+        }
         if (diff > old_diff) {
             highInt = mid;
         } else {
