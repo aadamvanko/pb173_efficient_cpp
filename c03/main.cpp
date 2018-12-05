@@ -6,7 +6,7 @@
 
 using namespace std;
 
-constexpr int MAX_LENGTH = 100000;
+constexpr int MAX_LENGTH = 110000;
 char str1[MAX_LENGTH];
 char str2[MAX_LENGTH];
 
