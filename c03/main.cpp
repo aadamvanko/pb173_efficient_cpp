@@ -68,7 +68,8 @@ int main()
     size_t str2Len = strlen(str2);
     str2[--str2Len] = '\0';
 
-    int best = /*LCSubStr(str1, str2, str1Len, str2Len);*/lcs(str1, str2, str1Len, str2Len, 0);
+    int best = LCSubStr(str1, str2, str1Len, str2Len);
+        /*lcs(str1, str2, str1Len, str2Len, 0);*/
     /*for (char *str1It = str1; *str1It; str1It++) {
         for (char *str2It = str2; *str2It; str2It++) {
             char *s1It = str1It;
