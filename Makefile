@@ -34,3 +34,6 @@ c1: c01/main.cpp
 
 c2: c02/main.cpp
 	$(CXX) $(CXXFLAGS) -o c2 c02/main.cpp
+
+c3: c03/main.cpp
+	$(CXX) $(CXXFLAGS) -o c3 c03/main.cpp
